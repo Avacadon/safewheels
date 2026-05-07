@@ -1,0 +1,2705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SafeWheels – Employee Transport Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --red: #e0191b;
+    --red-dark: #b01315;
+    --red-light: #ff3b3d;
+    --grey: #1e1e1e;
+    --grey-light: #3d3d3d;
+    --grey-mid: #555;
+    --grey-soft: #888;
+    --bg: #111111;
+    --card: #1c1c1c;
+    --card2: #242424;
+    --border: #303030;
+    --white: #f8f8f8;
+    --white-dim: #c0c0c0;
+    --success: #2ecc71;
+    --warning: #f39c12;
+    --font-head: 'Rajdhani', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --nav-w: 240px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--white); font-family:var(--font-body); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+  /* ===== TOP NAVBAR ===== */
+  .nav {
+    width:100%; height:54px; background:var(--card); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; flex-direction:row; flex-shrink:0; z-index:200;
+    padding:0 18px; gap:0;
+  }
+  .nav-logo {
+    display:flex; align-items:center; gap:9px;
+    padding-right:18px; border-right:1px solid var(--border); margin-right:6px;
+    flex-shrink:0;
+  }
+  .nav-logo-icon {
+    width:30px; height:30px; background:var(--red); border-radius:7px;
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+  }
+  .nav-logo span { font-family:var(--font-head); font-size:18px; font-weight:700; letter-spacing:1px; white-space:nowrap; }
+  .nav-logo span em { color:var(--red); font-style:normal; }
+  .nav-section { display:none; }
+  .nav-bottom { display:none; }
+  .nav-links { display:flex; align-items:center; }
+  .nav-item {
+    display:flex; align-items:center; gap:7px; padding:0 13px; height:54px;
+    cursor:pointer; font-size:13px; font-weight:500; color:var(--grey-soft);
+    transition:all .18s; border-bottom:2px solid transparent; margin-bottom:-1px;
+    white-space:nowrap;
+  }
+  .nav-item:hover { color:var(--white); background:rgba(255,255,255,.04); }
+  .nav-item.active { color:var(--red); border-bottom-color:var(--red); }
+  .nav-item .ni { font-size:14px; }
+  .nav-item .badge {
+    background:var(--red-dark); color:#fff; font-size:9px;
+    padding:1px 6px; border-radius:20px; font-weight:700;
+  }
+  .nav-item.active .badge { background:rgba(224,25,27,.25); color:var(--red-light); }
+  .nav-date-group {
+    display:flex; align-items:center; gap:4px;
+    margin-left:14px; padding-left:14px; border-left:1px solid var(--border);
+  }
+  .date-pill {
+    padding:4px 11px; border-radius:20px; font-size:11px; font-weight:600;
+    cursor:pointer; border:1px solid var(--border); color:var(--grey-soft);
+    background:transparent; font-family:var(--font-body); transition:all .18s; white-space:nowrap;
+  }
+  .date-pill:hover { border-color:var(--grey-mid); color:var(--white-dim); }
+  .date-pill.active { background:var(--red); border-color:var(--red); color:#fff; }
+  .nav-actions {
+    margin-left:auto; display:flex; align-items:center; gap:5px;
+  }
+  .nav-add-btn {
+    margin:0; background:transparent; border:1px solid var(--border);
+    border-radius:7px; padding:5px 11px; cursor:pointer; display:flex; align-items:center;
+    gap:5px; color:var(--grey-soft); font-size:11px; font-family:var(--font-body);
+    font-weight:500; transition:all .18s; white-space:nowrap;
+  }
+  .nav-add-btn:hover { border-color:var(--red); color:var(--red); background:rgba(224,25,27,.06); }
+  .nav-add-btn.red { background:var(--red); border-color:var(--red); color:#fff; font-weight:600; }
+  .nav-add-btn.red:hover { background:var(--red-light); }
+
+  /* ===== MAIN AREA ===== */
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
+  .topbar { display:none; }
+  .topbar-title { font-family:var(--font-head); font-size:22px; font-weight:700; letter-spacing:.5px; }
+  .topbar-sub { color:var(--grey-soft); font-size:13px; margin-left:4px; }
+  .topbar-actions { margin-left:auto; display:flex; gap:10px; align-items:center; }
+  .btn {
+    padding:8px 18px; border-radius:7px; font-family:var(--font-body); font-size:13px;
+    font-weight:500; cursor:pointer; border:none; display:flex; align-items:center; gap:7px;
+    transition:all .2s;
+  }
+  .btn-red { background:var(--red); color:#fff; }
+  .btn-red:hover { background:var(--red-light); }
+  .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--white-dim); }
+  .btn-ghost:hover { border-color:var(--red); color:var(--white); }
+  .btn-success { background:var(--success); color:#fff; }
+  .btn-success:hover { background:#27ae60; }
+
+  /* ===== PAGE CONTENT ===== */
+  .page { flex:1; overflow:hidden; display:none; }
+  .page.active { display:flex; }
+
+  /* ===== MAP PAGE ===== */
+  #page-map { flex-direction:row; gap:0; }
+
+  .map-panel {
+    flex:1; position:relative; background:var(--bg); padding:14px; display:flex; flex-direction:column;
+  }
+  #map { width:100%; height:100%; border-radius:12px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,.6); }
+
+  /* map location search overlay */
+  .map-search-bar {
+    position:absolute; top:14px; left:14px; right:14px; z-index:500;
+    display:flex; gap:8px;
+  }
+  .map-search-field {
+    flex:1; position:relative; display:flex; flex-direction:column;
+  }
+  .map-search-label {
+    position:absolute; top:-9px; left:10px; font-size:9px; font-weight:700;
+    text-transform:uppercase; letter-spacing:1px; color:var(--grey-soft);
+    background:var(--card); padding:0 4px; z-index:1; border-radius:3px;
+  }
+  .map-search-input {
+    width:100%; background:var(--card); border:1px solid var(--border);
+    border-radius:8px; padding:10px 14px; color:var(--white); font-family:var(--font-body);
+    font-size:13px; outline:none;
+  }
+  .map-search-input:focus { border-color:var(--red); }
+  .map-search-input::placeholder { color:var(--grey-soft); }
+  .map-search-input.has-val { border-color:rgba(224,25,27,.5); }
+  .map-suggest-list {
+    position:absolute; top:calc(100% + 4px); left:0; right:0;
+    background:var(--card); border:1px solid var(--border); border-radius:8px;
+    overflow:hidden; z-index:600; box-shadow:0 8px 24px rgba(0,0,0,.6);
+    max-height:220px; overflow-y:auto;
+  }
+  .map-suggest-list::-webkit-scrollbar { width:4px; }
+  .map-suggest-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+  .map-suggest-item {
+    padding:10px 14px; font-size:12px; cursor:pointer; color:var(--white-dim);
+    border-bottom:1px solid var(--border); transition:background .15s; line-height:1.4;
+  }
+  .map-suggest-item:last-child { border-bottom:none; }
+  .map-suggest-item:hover { background:var(--card2); color:var(--white); }
+  .map-suggest-item strong { color:var(--red-light); font-weight:600; }
+  .map-suggest-item .suggest-sub { font-size:10px; color:var(--grey-soft); margin-top:2px; }
+  .map-search-btn {
+    background:var(--red); border:none; border-radius:8px; padding:10px 16px;
+    color:#fff; cursor:pointer; display:flex; align-items:center; gap:6px;
+    font-family:var(--font-body); font-size:13px; font-weight:600; white-space:nowrap;
+    flex-shrink:0; align-self:flex-start;
+  }
+  .map-search-btn:hover { background:var(--red-light); }
+  .map-pin-hint {
+    position:absolute; bottom:28px; left:28px; z-index:500;
+    background:rgba(26,26,26,.9); border:1px solid var(--border); border-radius:8px;
+    padding:8px 14px; font-size:12px; color:var(--grey-soft); display:flex; align-items:center; gap:8px;
+  }
+
+  /* ===== RIGHT PANEL ===== */
+  .right-panel {
+    width:360px; background:var(--card); border-left:1px solid var(--border);
+    display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0;
+  }
+  .rp-header {
+    padding:18px 20px 14px; border-bottom:1px solid var(--border); flex-shrink:0;
+  }
+  .rp-header h3 { font-family:var(--font-head); font-size:17px; font-weight:700; letter-spacing:.5px; }
+  .rp-header p { font-size:12px; color:var(--grey-soft); margin-top:3px; }
+
+  /* steps */
+  .steps {
+    display:flex; padding:16px 20px; gap:0; border-bottom:1px solid var(--border); flex-shrink:0;
+  }
+  .step {
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; position:relative;
+  }
+  .step:not(:last-child)::after {
+    content:''; position:absolute; top:13px; left:50%; right:-50%;
+    height:2px; background:var(--border); z-index:0;
+  }
+  .step.done:not(:last-child)::after { background:var(--red); }
+  .step-num {
+    width:26px; height:26px; border-radius:50%; background:var(--border); color:var(--grey-soft);
+    font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; z-index:1;
+    transition:all .3s;
+  }
+  .step.active .step-num { background:var(--red); color:#fff; }
+  .step.done .step-num { background:var(--success); color:#fff; }
+  .step-label { font-size:10px; color:var(--grey-soft); text-align:center; line-height:1.2; }
+  .step.active .step-label { color:var(--white); }
+  .step.done .step-label { color:var(--success); }
+
+  /* form sections */
+  .rp-body { padding:16px 20px; display:flex; flex-direction:column; gap:14px; flex:1; }
+
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-label { font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--grey-soft); font-weight:600; }
+  .form-input, .form-select {
+    background:var(--card2); border:1px solid var(--border); border-radius:8px;
+    padding:10px 12px; color:var(--white); font-family:var(--font-body); font-size:13px; outline:none;
+    width:100%; transition:border .2s;
+  }
+  .form-input:focus, .form-select:focus { border-color:var(--red); }
+  .form-input::placeholder { color:var(--grey-soft); }
+  .form-select option { background:var(--card2); }
+
+  .location-row { display:flex; gap:8px; }
+  .location-row .form-input { flex:1; }
+  .loc-pin-btn {
+    background:var(--card2); border:1px solid var(--border); border-radius:8px;
+    padding:10px 12px; cursor:pointer; color:var(--grey-soft); font-size:15px;
+    display:flex; align-items:center; transition:all .2s; flex-shrink:0;
+  }
+  .loc-pin-btn:hover, .loc-pin-btn.active { border-color:var(--red); color:var(--red); background:rgba(224,25,27,.1); }
+
+  .trip-type-row { display:flex; gap:8px; }
+  .trip-type-btn {
+    flex:1; padding:9px; border-radius:8px; border:1px solid var(--border); cursor:pointer;
+    background:var(--card2); color:var(--white-dim); font-size:12px; font-weight:500;
+    display:flex; align-items:center; justify-content:center; gap:6px; transition:all .2s;
+    font-family:var(--font-body);
+  }
+  .trip-type-btn:hover { border-color:var(--red); color:var(--white); }
+  .trip-type-btn.active { background:rgba(224,25,27,.15); border-color:var(--red); color:var(--red); }
+
+  /* employee list in assignment */
+  .emp-list { display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto; }
+  .emp-list::-webkit-scrollbar { width:4px; }
+  .emp-list::-webkit-scrollbar-track { background:transparent; }
+  .emp-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+  .emp-card {
+    background:var(--card2); border:1px solid var(--border); border-radius:8px;
+    padding:10px 12px; display:flex; align-items:center; gap:10px; cursor:pointer;
+    transition:all .2s;
+  }
+  .emp-card:hover { border-color:var(--grey-mid); }
+  .emp-card.selected { border-color:var(--red); background:rgba(224,25,27,.08); }
+  .emp-avatar {
+    width:30px; height:30px; border-radius:50%; background:var(--red-dark);
+    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;
+    flex-shrink:0;
+  }
+  .emp-info { flex:1; min-width:0; }
+  .emp-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .emp-addr { font-size:11px; color:var(--grey-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .emp-check { color:var(--red); font-size:16px; opacity:0; transition:opacity .2s; }
+  .emp-card.selected .emp-check { opacity:1; }
+
+  /* summary box */
+  .summary-box {
+    background:var(--card2); border:1px solid var(--border); border-radius:10px;
+    padding:14px; display:flex; flex-direction:column; gap:10px;
+  }
+  .summary-row { display:flex; justify-content:space-between; align-items:center; }
+  .summary-key { font-size:11px; color:var(--grey-soft); }
+  .summary-val { font-size:13px; font-weight:500; }
+  .summary-tag {
+    background:rgba(224,25,27,.15); color:var(--red); border-radius:4px;
+    padding:2px 8px; font-size:11px; font-weight:600;
+  }
+
+  .divider { height:1px; background:var(--border); }
+
+  .confirm-btn-wrap { padding:16px 20px; border-top:1px solid var(--border); flex-shrink:0; }
+
+  /* ===== ROSTER/TABLE PAGE ===== */
+  #page-roster { flex-direction:column; overflow:hidden; }
+  .roster-topbar {
+    padding:16px 24px; background:var(--card); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:14px; flex-shrink:0;
+  }
+  .roster-topbar h3 { font-family:var(--font-head); font-size:18px; font-weight:700; }
+  .roster-topbar p { font-size:12px; color:var(--grey-soft); }
+  .roster-topbar-actions { margin-left:auto; display:flex; gap:10px; }
+
+  .table-wrap { flex:1; overflow:auto; padding:20px 24px; }
+  .roster-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .roster-table thead tr { background:var(--card2); }
+  .roster-table th {
+    padding:11px 14px; text-align:left; font-size:10px; text-transform:uppercase;
+    letter-spacing:1.5px; color:var(--grey-soft); font-weight:600; border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  .roster-table td {
+    padding:12px 14px; border-bottom:1px solid rgba(58,58,58,.5);
+    vertical-align:middle;
+  }
+  .roster-table tr:hover td { background:rgba(255,255,255,.02); }
+  .status-badge {
+    padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; display:inline-block;
+  }
+  .status-pickup { background:rgba(46,204,113,.15); color:var(--success); }
+  .status-drop { background:rgba(224,25,27,.15); color:var(--red); }
+  .row-num { color:var(--grey-soft); font-size:12px; }
+
+  /* ===== EMPLOYEES PAGE ===== */
+  #page-employees, #page-drivers, #page-vehicles { flex-direction:column; overflow:hidden; }
+  .manage-topbar {
+    padding:16px 24px; background:var(--card); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:14px; flex-shrink:0;
+  }
+  .manage-topbar h3 { font-family:var(--font-head); font-size:18px; font-weight:700; }
+  .manage-topbar-actions { margin-left:auto; display:flex; gap:10px; }
+  .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; padding:20px 24px; overflow:auto; flex:1; }
+  .person-card {
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:18px; display:flex; flex-direction:column; gap:12px; transition:all .2s;
+  }
+  .person-card:hover { border-color:var(--grey-mid); transform:translateY(-2px); }
+  .person-card-top { display:flex; align-items:center; gap:12px; }
+  .person-avatar-lg {
+    width:44px; height:44px; border-radius:50%; background:var(--red-dark);
+    display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700;
+    flex-shrink:0;
+  }
+  .person-avatar-lg.driver-av { background:#1a3a5c; }
+  .person-name { font-size:15px; font-weight:600; }
+  .person-role { font-size:12px; color:var(--grey-soft); margin-top:2px; }
+  .person-meta { display:flex; flex-direction:column; gap:5px; }
+  .person-meta-row { display:flex; gap:8px; align-items:center; font-size:12px; color:var(--white-dim); }
+  .person-meta-row span:first-child { color:var(--grey-soft); width:60px; flex-shrink:0; }
+  .person-card-actions { display:flex; gap:8px; }
+  .btn-sm { padding:6px 14px; font-size:12px; border-radius:6px; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000;
+    display:none; align-items:center; justify-content:center;
+    backdrop-filter:blur(4px);
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    width:480px; max-height:90vh; overflow-y:auto; padding:28px;
+    animation:modalIn .2s ease;
+  }
+  @keyframes modalIn { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:none} }
+  .modal-title { font-family:var(--font-head); font-size:20px; font-weight:700; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
+  .modal-close { cursor:pointer; color:var(--grey-soft); font-size:20px; background:none; border:none; color:inherit; }
+  .modal-close:hover { color:var(--red); }
+  .modal-form { display:flex; flex-direction:column; gap:14px; }
+  .modal-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:6px; }
+
+
+  /* ===== DELETE BUTTON ===== */
+  .btn-delete {
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(224,25,27,.1); border:1px solid rgba(224,25,27,.25);
+    color:var(--red); padding:5px 11px; border-radius:6px;
+    font-size:12px; font-weight:500; cursor:pointer; font-family:var(--font-body);
+    transition:all .18s;
+  }
+  .btn-delete:hover { background:var(--red); color:#fff; border-color:var(--red); }
+  .btn-delete-icon {
+    display:inline-flex; align-items:center; justify-content:center;
+    background:rgba(224,25,27,.12); border:1px solid rgba(224,25,27,.2);
+    color:var(--red); width:28px; height:28px; border-radius:6px;
+    font-size:13px; cursor:pointer; transition:all .18s; flex-shrink:0;
+  }
+  .btn-delete-icon:hover { background:var(--red); color:#fff; border-color:var(--red); }
+  .td-del { width:44px; text-align:center; padding:8px 6px !important; }
+
+
+  .btn-edit {
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(255,255,255,.06); border:1px solid var(--border);
+    color:var(--white-dim); padding:5px 11px; border-radius:6px;
+    font-size:12px; font-weight:500; cursor:pointer; font-family:var(--font-body);
+    transition:all .18s;
+  }
+  .btn-edit:hover { background:rgba(255,255,255,.12); border-color:var(--grey-mid); color:var(--white); }
+  .btn-edit-icon {
+    display:inline-flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.06); border:1px solid var(--border);
+    color:var(--white-dim); width:28px; height:28px; border-radius:6px;
+    font-size:12px; cursor:pointer; transition:all .18s; flex-shrink:0;
+  }
+  .btn-edit-icon:hover { background:rgba(255,255,255,.14); border-color:var(--grey-mid); color:var(--white); }
+  .card-actions { display:flex; gap:6px; margin-top:4px; }
+  .td-actions { width:80px; text-align:center; padding:8px 6px !important; display:flex; gap:4px; align-items:center; justify-content:center; }
+
+
+  /* ===== TRIP DETAIL MODAL ===== */
+  .trip-detail-modal { width:560px; max-width:95vw; }
+  .tdm-header {
+    background:var(--card2); border-radius:10px 10px 0 0; padding:20px 24px 16px;
+    border-bottom:1px solid var(--border);
+  }
+  .tdm-badge { display:inline-flex; align-items:center; gap:6px; margin-bottom:8px; }
+  .tdm-title { font-family:var(--font-head); font-size:22px; font-weight:700; letter-spacing:.5px; }
+  .tdm-time { font-size:12px; color:var(--grey-soft); margin-top:3px; }
+  .tdm-body { padding:20px 24px; display:flex; flex-direction:column; gap:18px; }
+  .tdm-section { }
+  .tdm-section-label {
+    font-size:10px; text-transform:uppercase; letter-spacing:1.5px;
+    color:var(--grey-soft); font-weight:600; margin-bottom:10px;
+    padding-bottom:6px; border-bottom:1px solid var(--border);
+  }
+  .tdm-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tdm-field { background:var(--card2); border-radius:8px; padding:10px 14px; }
+  .tdm-field-label { font-size:10px; color:var(--grey-soft); text-transform:uppercase; letter-spacing:.8px; margin-bottom:3px; }
+  .tdm-field-val { font-size:13px; font-weight:500; color:var(--white); word-break:break-word; }
+  .tdm-field.full { grid-column:1/-1; }
+  .tdm-emp-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+  .tdm-emp-chip {
+    background:var(--card2); border:1px solid var(--border); border-radius:20px;
+    padding:4px 12px; font-size:12px; color:var(--white-dim);
+  }
+  .tr-clickable { cursor:pointer; }
+  .tr-clickable:hover td { background:rgba(224,25,27,.06) !important; }
+
+
+  /* ===== SAVED PLACES ===== */
+  .suggest-saved-header {
+    padding:6px 14px 4px; font-size:9px; text-transform:uppercase;
+    letter-spacing:1.2px; color:var(--grey-soft); font-weight:700;
+    border-bottom:1px solid var(--border); background:var(--card2);
+  }
+  .suggest-saved-item {
+    padding:10px 14px; font-size:12px; cursor:pointer; color:var(--white-dim);
+    border-bottom:1px solid var(--border); transition:background .15s;
+    display:flex; align-items:center; gap:10px; line-height:1.4;
+  }
+  .suggest-saved-item:hover { background:var(--card2); color:var(--white); }
+  .suggest-saved-icon {
+    width:24px; height:24px; border-radius:50%; background:rgba(224,25,27,.15);
+    border:1px solid rgba(224,25,27,.3); color:var(--red); font-size:12px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .suggest-saved-name { font-weight:600; font-size:12px; color:var(--white); }
+  .suggest-saved-addr { font-size:10px; color:var(--grey-soft); margin-top:1px; }
+  .suggest-save-btn {
+    display:inline-flex; align-items:center; gap:4px; margin-left:auto;
+    background:transparent; border:1px solid var(--border); color:var(--grey-soft);
+    padding:3px 8px; border-radius:4px; font-size:10px; font-weight:600;
+    cursor:pointer; font-family:var(--font-body); transition:all .15s; flex-shrink:0;
+  }
+  .suggest-save-btn:hover { border-color:var(--red); color:var(--red); }
+  .suggest-save-btn.saved { border-color:var(--success); color:var(--success); }
+
+  /* ===== NOTIFICATIONS ===== */
+  .toast {
+    position:fixed; bottom:24px; right:24px; background:var(--card); border:1px solid var(--border);
+    border-left:3px solid var(--red); border-radius:10px; padding:12px 18px;
+    font-size:13px; z-index:2000; animation:toastIn .3s ease;
+    max-width:300px;
+  }
+  @keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
+
+  /* scroll */
+  .right-panel::-webkit-scrollbar { width:4px; }
+  .right-panel::-webkit-scrollbar-track { background:transparent; }
+  .right-panel::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+  /* Leaflet overrides */
+  .leaflet-container { font-family:var(--font-body); }
+  .leaflet-popup-content-wrapper { background:var(--card); border:1px solid var(--border); color:var(--white); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.5); }
+  .leaflet-popup-tip { background:var(--card); }
+
+  /* ===== ROUTE OPTIMIZER STYLES ===== */
+  .route-opt-banner {
+    background:rgba(224,25,27,.08); border:1px solid rgba(224,25,27,.25);
+    border-radius:10px; padding:12px 14px; display:flex; align-items:center;
+    gap:10px; margin-top:4px;
+  }
+  .route-opt-icon { font-size:20px; flex-shrink:0; }
+  .route-opt-text { flex:1; min-width:0; }
+  .route-opt-text strong { font-size:13px; color:var(--white); display:block; }
+  .route-opt-text span { font-size:11px; color:var(--grey-soft); }
+  .btn-optimize {
+    background:var(--red); border:none; border-radius:7px; padding:7px 14px;
+    color:#fff; font-family:var(--font-body); font-size:12px; font-weight:600;
+    cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all .2s;
+    display:flex; align-items:center; gap:5px;
+  }
+  .btn-optimize:hover { background:var(--red-light); }
+  .btn-optimize:disabled { background:var(--grey-mid); cursor:not-allowed; }
+
+  .pickup-order-box {
+    background:var(--card2); border:1px solid var(--border); border-radius:10px;
+    overflow:hidden; margin-top:4px;
+  }
+  .pickup-order-header {
+    padding:10px 14px; background:rgba(224,25,27,.1); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .pickup-order-header span { font-size:11px; font-weight:700; text-transform:uppercase;
+    letter-spacing:1px; color:var(--red); }
+  .pickup-order-row {
+    display:flex; align-items:center; gap:10px; padding:9px 14px;
+    border-bottom:1px solid rgba(48,48,48,.5); transition:background .15s;
+  }
+  .pickup-order-row:last-child { border-bottom:none; }
+  .pickup-order-row:hover { background:rgba(255,255,255,.02); }
+  .pickup-num {
+    width:22px; height:22px; border-radius:50%; background:var(--red);
+    color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center;
+    justify-content:center; flex-shrink:0;
+  }
+  .pickup-num.dest { background:#1a78c2; }
+  .pickup-emp-info { flex:1; min-width:0; }
+  .pickup-emp-name { font-size:12px; font-weight:600; color:var(--white); }
+  .pickup-emp-addr { font-size:10px; color:var(--grey-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pickup-dist { font-size:10px; color:var(--grey-soft); white-space:nowrap; flex-shrink:0; text-align:right; }
+  .pickup-dist strong { color:var(--warning); display:block; font-size:11px; }
+
+  .opt-total-bar {
+    padding:8px 14px; background:rgba(46,204,113,.08); border-top:1px solid rgba(46,204,113,.2);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .opt-total-bar span { font-size:11px; color:var(--grey-soft); }
+  .opt-total-bar strong { font-size:12px; color:var(--success); }
+
+  .btn-dl-route-pdf {
+    background:transparent; border:1px solid var(--border); border-radius:6px;
+    padding:4px 10px; color:var(--grey-soft); font-size:11px; font-weight:600;
+    cursor:pointer; font-family:var(--font-body); transition:all .18s;
+    display:flex; align-items:center; gap:4px;
+  }
+  .btn-dl-route-pdf:hover { border-color:var(--red); color:var(--red); }
+
+  /* Mobile-only elements — always hidden on desktop, media query shows them */
+  .mob-drawer { display:none !important; }
+  .mob-menu-btn { display:none !important; }
+
+/* ============================================================
+   MOBILE STYLES — only active on screens <= 768px
+   Desktop CSS above is completely untouched
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* ── BODY: allow scroll on mobile ── */
+  body { height:auto; min-height:100vh; overflow:auto; }
+
+  /* ── TOP NAV: logo + hamburger only on one line ── */
+  .nav {
+    height:52px; padding:0 14px;
+    position:sticky; top:0; z-index:300;
+    overflow:hidden;
+  }
+  .nav-links { display:none; }
+  .nav-date-group { display:none; }
+  .nav-actions { display:none; }
+  .nav-logo { border-right:none; padding-right:0; margin-right:0; }
+
+  /* Hamburger button */
+  .mob-menu-btn {
+    display:flex !important; align-items:center; justify-content:center;
+    margin-left:auto; background:none; border:none;
+    color:var(--white); font-size:20px; cursor:pointer; padding:6px;
+  }
+
+  /* Mobile drawer overlay */
+  .mob-drawer {
+    display:none; position:fixed; inset:0; z-index:800;
+  }
+  .mob-drawer.open { display:block !important; }
+  .mob-drawer-bg {
+    position:absolute; inset:0; background:rgba(0,0,0,.65);
+    backdrop-filter:blur(3px);
+  }
+  .mob-drawer-panel {
+    position:absolute; top:0; right:0; bottom:0;
+    width:280px; background:var(--card);
+    border-left:1px solid var(--border);
+    display:flex; flex-direction:column;
+    overflow-y:auto; padding-bottom:24px;
+    animation:drawerIn .22s ease;
+  }
+  @keyframes drawerIn { from{transform:translateX(100%)} to{transform:none} }
+  .mob-drawer-head {
+    padding:16px 18px 12px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+  }
+  .mob-drawer-title {
+    font-family:var(--font-head); font-size:16px; font-weight:700; color:var(--white);
+  }
+  .mob-drawer-close {
+    background:none; border:none; color:var(--grey-soft);
+    font-size:18px; cursor:pointer; padding:4px;
+  }
+  .mob-drawer-section {
+    padding:10px 14px 2px; font-size:9px; text-transform:uppercase;
+    letter-spacing:1.5px; color:var(--grey-soft); font-weight:700;
+  }
+  .mob-nav-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:13px 18px; font-size:14px; font-weight:500;
+    color:var(--white-dim); cursor:pointer; border-bottom:1px solid rgba(48,48,48,.5);
+    transition:all .15s;
+  }
+  .mob-nav-item:hover, .mob-nav-item.active { background:rgba(224,25,27,.08); color:var(--red); }
+  .mob-nav-item .badge {
+    background:var(--red-dark); color:#fff; font-size:9px;
+    padding:2px 7px; border-radius:20px; font-weight:700;
+  }
+  .mob-date-row {
+    display:flex; gap:6px; padding:12px 14px; flex-wrap:wrap;
+  }
+  .mob-action-row {
+    display:flex; flex-direction:column; gap:8px; padding:12px 14px 0;
+  }
+  .mob-action-btn {
+    width:100%; padding:11px 16px; border-radius:8px;
+    font-family:var(--font-body); font-size:13px; font-weight:600;
+    cursor:pointer; border:1px solid var(--border); color:var(--white-dim);
+    background:var(--card2); text-align:left; transition:all .15s;
+  }
+  .mob-action-btn.red { background:var(--red); border-color:var(--red); color:#fff; }
+  .mob-action-btn:hover { border-color:var(--red); color:var(--red); }
+  .mob-action-btn.red:hover { background:var(--red-light); }
+
+  /* ── MAIN: allow flex/scroll ── */
+  .main { overflow:auto; min-height:0; }
+
+  /* ── PAGE: block instead of flex, allow scroll ── */
+  .page { overflow:auto; }
+  .page.active { display:block; }
+
+  /* ── MAP PAGE: stack vertically ── */
+  #page-map { flex-direction:column !important; height:auto; overflow:visible; }
+
+  /* Map panel: fixed height map, search fields sit BELOW the map (not overlaid) */
+  .map-panel {
+    padding:0; height:auto; flex:none;
+    display:flex; flex-direction:column; gap:0; overflow:visible;
+  }
+  #map {
+    height:45vw; min-height:200px; max-height:260px;
+    border-radius:8px 8px 0 0; flex-shrink:0;
+  }
+
+  /* Search bar: pulled OUT of absolute overlay, flows below the map */
+  .map-search-bar {
+    position:static;
+    flex-direction:column; gap:0;
+    background:var(--card); border:1px solid var(--border);
+    border-top:none; border-radius:0 0 8px 8px;
+    padding:10px; margin:0 0 6px 0;
+    overflow:visible; z-index:auto;
+  }
+  .map-search-label {
+    position:static; background:transparent;
+    font-size:9px; color:var(--grey-soft); padding:0 0 2px 2px;
+    display:block; margin-bottom:0;
+  }
+  .map-search-field { width:100%; margin-bottom:8px; position:relative; }
+  .map-search-field:last-child { margin-bottom:0; }
+  .map-search-input { border-radius:6px; font-size:14px; padding:10px 12px; }
+  .map-suggest-list {
+    position:absolute; top:calc(100% + 2px); left:0; right:0;
+    max-height:200px; z-index:999;
+    border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.8);
+  }
+  .map-suggest-item { padding:12px 14px; font-size:14px; }
+  .map-pin-hint { display:none; }
+
+  /* Right panel: full width below map */
+  .right-panel {
+    width:100% !important; height:auto; border-left:none;
+    border-top:1px solid var(--border); overflow:visible;
+  }
+  .rp-body { overflow:visible; }
+  .emp-list { max-height:200px; }
+
+  /* ── ROSTER PAGE ── */
+  #page-roster { height:auto; overflow:auto; }
+  .roster-topbar {
+    flex-wrap:wrap; gap:8px; padding:12px 14px;
+  }
+  .roster-topbar-actions {
+    width:100%; display:flex; gap:6px; flex-wrap:wrap;
+  }
+  .roster-topbar-actions .btn { flex:1; justify-content:center; font-size:12px; padding:7px 10px; }
+  .table-wrap { padding:10px 14px; overflow-x:auto; }
+  .roster-table { font-size:12px; min-width:600px; }
+  .roster-table th { padding:8px 10px; }
+  .roster-table td { padding:9px 10px; }
+
+  /* ── EMPLOYEES / DRIVERS / VEHICLES ── */
+  #page-employees, #page-drivers, #page-vehicles { height:auto; overflow:auto; }
+  .manage-topbar { padding:12px 14px; }
+  .cards-grid {
+    grid-template-columns:1fr; gap:10px; padding:12px 14px;
+    overflow:visible;
+  }
+  .person-card { padding:14px; }
+
+  /* ── MODALS: full screen on mobile ── */
+  .modal-overlay { align-items:flex-end; padding:0; }
+  .modal {
+    width:100% !important; max-width:100% !important;
+    max-height:92vh; border-radius:18px 18px 0 0;
+    padding:20px 18px 30px; animation:modalUp .25s ease;
+  }
+  @keyframes modalUp { from{transform:translateY(100%)} to{transform:none} }
+  .modal-row { grid-template-columns:1fr; }
+  .trip-detail-modal { border-radius:18px 18px 0 0; width:100% !important; }
+  .tdm-header { border-radius:18px 18px 0 0; padding:16px 18px 12px; }
+  .tdm-body { padding:14px 18px; }
+  .tdm-grid { grid-template-columns:1fr; }
+
+  /* ── TOAST: bottom center ── */
+  .toast { right:14px; left:14px; bottom:16px; max-width:none; text-align:center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+
+
+<!-- ===== TOP NAV ===== -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">SW</div>
+    <span>Safe<em>Wheels</em></span>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item active" id="nvi-map" onclick="showPage('map')">Route Planner</div>
+    <div class="nav-item" id="nvi-roster" onclick="showPage('roster')">Roster &amp; Trips<span class="badge" id="roster-badge">0</span></div>
+    <div class="nav-item" id="nvi-employees" onclick="showPage('employees')">Employees<span class="badge" id="emp-badge">3</span></div>
+    <div class="nav-item" id="nvi-drivers" onclick="showPage('drivers')">Drivers<span class="badge" id="drv-badge">2</span></div>
+    <div class="nav-item" id="nvi-vehicles" onclick="showPage('vehicles')">Vehicles<span class="badge" id="veh-badge">4</span></div>
+  </div>
+  <div class="nav-date-group">
+    <button class="date-pill active" id="dp-today" onclick="setDateFilter('today')">Today</button>
+    <button class="date-pill" id="dp-5" onclick="setDateFilter('5')">Last 5 Days</button>
+    <button class="date-pill" id="dp-30" onclick="setDateFilter('30')">Last 30 Days</button>
+  </div>
+  <div class="nav-actions">
+    <button class="nav-add-btn red" onclick="startNewTrip();showPage('map')">＋ New Trip</button>
+  </div>
+
+  <!-- Mobile hamburger button — hidden on desktop via CSS -->
+  <button class="mob-menu-btn" id="mobMenuBtn" onclick="toggleMobDrawer()" style="display:none">&#9776;</button>
+</nav>
+
+<!-- Mobile Drawer Menu -->
+<div class="mob-drawer" id="mobDrawer">
+  <div class="mob-drawer-bg" onclick="closeMobDrawer()"></div>
+  <div class="mob-drawer-panel">
+    <div class="mob-drawer-head">
+      <div class="mob-drawer-title">Safe<span style="color:var(--red)">Wheels</span></div>
+      <button class="mob-drawer-close" onclick="closeMobDrawer()">&#10005;</button>
+    </div>
+    <div class="mob-drawer-section">Navigation</div>
+    <div class="mob-nav-item" id="mnvi-map" onclick="mobNav('map')">Route Planner<span class="badge" style="visibility:hidden">0</span></div>
+    <div class="mob-nav-item" id="mnvi-roster" onclick="mobNav('roster')">Roster &amp; Trips<span class="badge" id="mob-roster-badge">0</span></div>
+    <div class="mob-nav-item" id="mnvi-employees" onclick="mobNav('employees')">Employees<span class="badge" id="mob-emp-badge">3</span></div>
+    <div class="mob-nav-item" id="mnvi-drivers" onclick="mobNav('drivers')">Drivers<span class="badge" id="mob-drv-badge">2</span></div>
+    <div class="mob-nav-item" id="mnvi-vehicles" onclick="mobNav('vehicles')">Vehicles<span class="badge" id="mob-veh-badge">4</span></div>
+    <div class="mob-drawer-section" style="margin-top:8px">Date Filter</div>
+    <div class="mob-date-row">
+      <button class="date-pill active" id="mob-dp-today" onclick="setDateFilter('today');closeMobDrawer()">Today</button>
+      <button class="date-pill" id="mob-dp-5" onclick="setDateFilter('5');closeMobDrawer()">Last 5 Days</button>
+      <button class="date-pill" id="mob-dp-30" onclick="setDateFilter('30');closeMobDrawer()">Last 30 Days</button>
+    </div>
+    <div class="mob-drawer-section" style="margin-top:8px">Quick Actions</div>
+    <div class="mob-action-row">
+      <button class="mob-action-btn" onclick="openModal('emp');closeMobDrawer()">＋ Add Employee</button>
+      <button class="mob-action-btn" onclick="openModal('drv');closeMobDrawer()">＋ Add Driver</button>
+      <button class="mob-action-btn" onclick="openModal('veh');closeMobDrawer()">＋ Add Vehicle</button>
+      <button class="mob-action-btn red" onclick="startNewTrip();showPage('map');closeMobDrawer()">＋ New Trip</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <span class="topbar-title" id="page-title">Route Planner</span>
+    <span class="topbar-sub" id="page-sub">Plan & assign employee pickup/drop trips</span>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="openModal('emp')">＋ Employee</button>
+      <button class="btn btn-ghost" onclick="openModal('drv')">＋ Driver</button>
+      <button class="btn btn-red" onclick="startNewTrip()">＋ New Trip</button>
+    </div>
+  </div>
+
+  <!-- MAP PAGE -->
+  <div class="page active" id="page-map">
+
+    <!-- Map -->
+    <div class="map-panel">
+      <div id="map"></div>
+      <div class="map-search-bar">
+        <div class="map-search-field">
+          <span class="map-search-label">Pickup</span>
+          <input class="map-search-input" id="map-search-pickup"
+            placeholder="Search pickup location…"
+            oninput="mapSuggest('pickup')"
+            onkeydown="if(event.key==='Enter')pinFromSearch('pickup')"
+            autocomplete="off"/>
+          <div class="map-suggest-list" id="suggest-pickup" style="display:none"></div>
+        </div>
+        <div class="map-search-field">
+          <span class="map-search-label">Drop</span>
+          <input class="map-search-input" id="map-search-drop"
+            placeholder="Search drop location…"
+            oninput="mapSuggest('drop')"
+            onkeydown="if(event.key==='Enter')pinFromSearch('drop')"
+            autocomplete="off"/>
+          <div class="map-suggest-list" id="suggest-drop" style="display:none"></div>
+        </div>
+      </div>
+      <div class="map-pin-hint">Click anywhere on the map to set a pickup/drop location</div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="rp-header">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h3>Trip Assignment</h3>
+          <button class="btn-delete" onclick="startNewTrip()" title="Clear and start over" style="font-size:11px">Clear</button>
+        </div>
+        <p>Complete all steps to schedule a trip</p>
+      </div>
+
+      <!-- Steps indicator -->
+      <div class="steps">
+        <div class="step active" id="step-1">
+          <div class="step-num">1</div>
+          <div class="step-label">Location</div>
+        </div>
+        <div class="step" id="step-2">
+          <div class="step-num">2</div>
+          <div class="step-label">Employees</div>
+        </div>
+        <div class="step" id="step-3">
+          <div class="step-num">3</div>
+          <div class="step-label">Driver</div>
+        </div>
+        <div class="step" id="step-4">
+          <div class="step-num">4</div>
+          <div class="step-label">Vehicle</div>
+        </div>
+      </div>
+
+      <div class="rp-body" id="rp-body">
+
+        <!-- STEP 1: Location -->
+        <div id="form-step-1" style="display:flex;flex-direction:column;gap:14px">
+          <div class="form-group">
+            <label class="form-label">Trip Type</label>
+            <div class="trip-type-row">
+              <button class="trip-type-btn active" id="tt-pickup" onclick="setTripType('pickup')">Pickup</button>
+              <button class="trip-type-btn" id="tt-drop" onclick="setTripType('drop')">Drop</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Pickup / Origin Location</label>
+            <div class="location-row">
+              <input class="form-input" id="loc-origin" placeholder="Type address or click map…"/>
+              <button class="loc-pin-btn" id="pin-origin" title="Click map to set" onclick="setMapMode('origin')">📌</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Destination</label>
+            <div class="location-row">
+              <input class="form-input" id="loc-dest" placeholder="Office or drop-off point…"/>
+              <button class="loc-pin-btn" id="pin-dest" title="Click map to set" onclick="setMapMode('dest')">📌</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date & Time</label>
+            <input class="form-input" id="trip-datetime" type="datetime-local"/>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Shift</label>
+            <select class="form-select" id="trip-shift">
+              <option value="">Select shift…</option>
+              <option>Morning (6 AM – 2 PM)</option>
+              <option>Afternoon (2 PM – 10 PM)</option>
+              <option>Night (10 PM – 6 AM)</option>
+              <option>General (9 AM – 6 PM)</option>
+            </select>
+          </div>
+
+          <button class="btn btn-red" style="width:100%;justify-content:center;margin-top:4px" onclick="goStep(2)">
+            Next: Select Employees →
+          </button>
+        </div>
+
+        <!-- STEP 2: Employees (hidden) -->
+        <div id="form-step-2" style="display:none">
+          <div class="form-group">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <label class="form-label" style="margin:0">Select Employees</label>
+              <button class="btn-edit" id="sel-all-btn" onclick="toggleSelectAll()" style="font-size:11px;padding:3px 10px">Select All</button>
+            </div>
+            <input class="form-input" id="emp-search" placeholder="Search employee…" oninput="filterEmployees(this.value)" style="margin-bottom:8px"/>
+            <div class="emp-list" id="emp-list"></div>
+          </div>
+          <div id="selected-emp-count" style="font-size:12px;color:var(--grey-soft);margin-top:4px">0 employees selected</div>
+
+          <!-- Route Optimizer Banner -->
+          <div class="route-opt-banner" id="route-opt-banner" style="display:none">
+            <div class="route-opt-icon">🗺️</div>
+            <div class="route-opt-text">
+              <strong>Optimize Pickup Order</strong>
+              <span>Auto-sort employees by shortest route from driver start → destination</span>
+            </div>
+            <button class="btn-optimize" id="btn-optimize-route" onclick="optimizeRoute()">⚡ Optimize</button>
+          </div>
+
+          <!-- Pickup Order Result -->
+          <div id="pickup-order-result" style="display:none">
+            <div class="pickup-order-box">
+              <div class="pickup-order-header">
+                <span>🔢 Optimized Pickup Order</span>
+                <button class="btn-dl-route-pdf" onclick="downloadRoutePDF()">⬇ PDF</button>
+              </div>
+              <div id="pickup-order-list"></div>
+              <div class="opt-total-bar">
+                <span>Total estimated distance</span>
+                <strong id="opt-total-dist">—</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="goStep(1)">← Back</button>
+            <button class="btn btn-red" style="flex:1;justify-content:center" onclick="goStep(3)">Next: Driver →</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Driver (hidden) -->
+        <div id="form-step-3" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Assign Driver</label>
+            <div class="emp-list" id="drv-list"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="goStep(2)">← Back</button>
+            <button class="btn btn-red" style="flex:1;justify-content:center" onclick="goStep(4)">Next: Vehicle →</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Vehicle + Confirm (hidden) -->
+        <div id="form-step-4" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Select Vehicle</label>
+            <select class="form-select" id="trip-vehicle">
+              <option value="">Choose vehicle…</option>
+              <option>MH-12-AB-1234 – Toyota Innova (7 seats)</option>
+              <option>KA-01-CD-5678 – Maruti Ertiga (6 seats)</option>
+              <option>KA-05-EF-9012 – Force Traveller (12 seats)</option>
+              <option>DL-3C-GH-3456 – Tata Winger (9 seats)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes (optional)</label>
+            <input class="form-input" id="trip-notes" placeholder="Special instructions…"/>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Summary -->
+          <div class="summary-box" id="trip-summary">
+            <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--grey-soft);margin-bottom:4px">Trip Summary</div>
+            <div class="summary-row"><span class="summary-key">Type</span><span class="summary-val" id="s-type">—</span></div>
+            <div class="summary-row"><span class="summary-key">Origin</span><span class="summary-val" id="s-origin" style="max-width:180px;text-align:right;font-size:12px">—</span></div>
+            <div class="summary-row"><span class="summary-key">Dest.</span><span class="summary-val" id="s-dest" style="max-width:180px;text-align:right;font-size:12px">—</span></div>
+            <div class="summary-row"><span class="summary-key">Date/Time</span><span class="summary-val" id="s-dt">—</span></div>
+            <div class="summary-row"><span class="summary-key">Employees</span><span class="summary-tag" id="s-emps">0</span></div>
+            <div class="summary-row"><span class="summary-key">Driver</span><span class="summary-val" id="s-driver">—</span></div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="goStep(3)">← Back</button>
+            <button class="btn btn-success" style="flex:1;justify-content:center" onclick="confirmTrip()">Confirm Trip</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /page-map -->
+
+  <!-- ROSTER PAGE -->
+  <div class="page" id="page-roster">
+    <div class="roster-topbar">
+      <div>
+        <h3>Roster & Trip Schedule</h3>
+        <p id="roster-count">0 trips scheduled</p>
+      </div>
+      <div class="roster-topbar-actions">
+        <button class="btn btn-ghost" onclick="downloadCSV()">Download CSV</button>
+        <button class="btn btn-ghost" onclick="downloadPDF()">Download PDF</button>
+        <button class="btn btn-red" onclick="showPage('map');startNewTrip()">＋ New Trip</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="roster-table" id="roster-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date & Time</th>
+            <th>Type</th>
+            <th>Employee(s)</th>
+            <th>Origin</th>
+            <th>Destination</th>
+            <th>Driver</th>
+            <th>Vehicle</th>
+            <th>Shift</th>
+            <th style="text-align:center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="roster-tbody">
+          <tr><td colspan="10" style="text-align:center;color:var(--grey-soft);padding:40px">No trips yet. Plan a trip from Route Planner.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- EMPLOYEES PAGE -->
+  <div class="page" id="page-employees">
+    <div class="manage-topbar">
+      <div>
+        <h3>Employees</h3>
+      </div>
+      <div class="manage-topbar-actions">
+        <button class="btn btn-red" onclick="openModal('emp')">＋ Add Employee</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="emp-cards"></div>
+  </div>
+
+  <!-- DRIVERS PAGE -->
+  <div class="page" id="page-drivers">
+    <div class="manage-topbar">
+      <div><h3>Drivers</h3></div>
+      <div class="manage-topbar-actions">
+        <button class="btn btn-red" onclick="openModal('drv')">＋ Add Driver</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="drv-cards"></div>
+  </div>
+
+
+  <!-- VEHICLES PAGE -->
+  <div class="page" id="page-vehicles">
+    <div class="manage-topbar">
+      <div><h3>Vehicles</h3></div>
+      <div class="manage-topbar-actions">
+        <button class="btn btn-red" onclick="openModal('veh')">＋ Add Vehicle</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="veh-cards"></div>
+  </div>
+
+</div><!-- /main -->
+
+
+
+<!-- ===== MODALS ===== -->
+<!-- Add Employee Modal -->
+<div class="modal-overlay" id="modal-emp">
+  <div class="modal">
+    <div class="modal-title">
+      Add Employee
+      <button class="modal-close" onclick="closeModal('emp')">✕</button>
+    </div>
+    <div class="modal-form">
+      <div class="modal-row">
+        <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="ne-fname" placeholder="Rahul"/></div>
+        <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="ne-lname" placeholder="Sharma"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Department</label>
+        <select class="form-select" id="ne-dept">
+          <option>Engineering</option><option>Operations</option><option>HR</option><option>Finance</option><option>Sales</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Home Address</label><input class="form-input" id="ne-addr" placeholder="Koramangala, Bengaluru…"/></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="ne-phone" placeholder="+91 98765 43210"/></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('emp')">Cancel</button>
+        <button class="btn btn-red" onclick="saveEmployee()">Save Employee</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Driver Modal -->
+<div class="modal-overlay" id="modal-drv">
+  <div class="modal">
+    <div class="modal-title">
+      Add Driver
+      <button class="modal-close" onclick="closeModal('drv')">✕</button>
+    </div>
+    <div class="modal-form">
+      <div class="modal-row">
+        <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="nd-fname" placeholder="Rajan"/></div>
+        <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="nd-lname" placeholder="Kumar"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">License No.</label><input class="form-input" id="nd-lic" placeholder="KA-01-2020-123456"/></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="nd-phone" placeholder="+91 99887 76655"/></div>
+      <div class="form-group"><label class="form-label">Assigned Vehicle</label>
+        <select class="form-select" id="nd-vehicle">
+          <option>MH-12-AB-1234 – Toyota Innova</option>
+          <option>KA-01-CD-5678 – Maruti Ertiga</option>
+          <option>KA-05-EF-9012 – Force Traveller</option>
+          <option>Unassigned</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('drv')">Cancel</button>
+        <button class="btn btn-red" onclick="saveDriver()">Save Driver</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Vehicle Modal -->
+<div class="modal-overlay" id="modal-veh">
+  <div class="modal">
+    <div class="modal-title">Add Vehicle<button class="modal-close" onclick="closeModal('veh')">✕</button></div>
+    <div class="modal-form">
+      <div class="modal-row">
+        <div class="form-group"><label class="form-label">Plate Number</label><input class="form-input" id="nv-plate" placeholder="KA-01-AB-1234"/></div>
+        <div class="form-group"><label class="form-label">Make / Model</label><input class="form-input" id="nv-model" placeholder="Toyota Innova"/></div>
+      </div>
+      <div class="modal-row">
+        <div class="form-group"><label class="form-label">Seats</label><input class="form-input" id="nv-seats" type="number" placeholder="7"/></div>
+        <div class="form-group"><label class="form-label">Type</label>
+          <select class="form-select" id="nv-type">
+            <option>Sedan</option><option>SUV / Innova</option><option>Ertiga / MPV</option><option>Force Traveller</option><option>Mini Bus</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Assigned Driver</label>
+        <select class="form-select" id="nv-driver"><option value="">Unassigned</option></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('veh')">Cancel</button>
+        <button class="btn btn-red" onclick="saveVehicle()">Save Vehicle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit Employee Modal -->
+<div class="modal-overlay" id="modal-edit-emp">
+  <div class="modal">
+    <div class="modal-title">Edit Employee<button class="modal-close" onclick="closeModal('edit-emp')">✕</button></div>
+    <div class="modal-form">
+      <div class="modal-row">
+        <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="ee-fname"/></div>
+        <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="ee-lname"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Department</label>
+        <select class="form-select" id="ee-dept">
+          <option>Engineering</option><option>Operations</option><option>HR</option><option>Finance</option><option>Sales</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Home Address</label><input class="form-input" id="ee-addr"/></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="ee-phone"/></div>
+      <input type="hidden" id="ee-id"/>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('edit-emp')">Cancel</button>
+        <button class="btn btn-red" onclick="saveEditEmployee()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Driver Modal -->
+<div class="modal-overlay" id="modal-edit-drv">
+  <div class="modal">
+    <div class="modal-title">Edit Driver<button class="modal-close" onclick="closeModal('edit-drv')">✕</button></div>
+    <div class="modal-form">
+      <div class="modal-row">
+        <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="ed-fname"/></div>
+        <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="ed-lname"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">License No.</label><input class="form-input" id="ed-lic"/></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="ed-phone"/></div>
+      <div class="form-group"><label class="form-label">Assigned Vehicle</label>
+        <select class="form-select" id="ed-vehicle">
+          <option>MH-12-AB-1234 – Toyota Innova</option>
+          <option>KA-01-CD-5678 – Maruti Ertiga</option>
+          <option>KA-05-EF-9012 – Force Traveller</option>
+          <option>Unassigned</option>
+        </select>
+      </div>
+      <input type="hidden" id="ed-id"/>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('edit-drv')">Cancel</button>
+        <button class="btn btn-red" onclick="saveEditDriver()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Vehicle Modal -->
+<div class="modal-overlay" id="modal-edit-veh">
+  <div class="modal">
+    <div class="modal-title">Edit Vehicle<button class="modal-close" onclick="closeModal('edit-veh')">✕</button></div>
+    <div class="modal-form">
+      <div class="modal-row">
+        <div class="form-group"><label class="form-label">Plate Number</label><input class="form-input" id="ev-plate"/></div>
+        <div class="form-group"><label class="form-label">Make / Model</label><input class="form-input" id="ev-model"/></div>
+      </div>
+      <div class="modal-row">
+        <div class="form-group"><label class="form-label">Seats</label><input class="form-input" id="ev-seats" type="number"/></div>
+        <div class="form-group"><label class="form-label">Type</label>
+          <select class="form-select" id="ev-type">
+            <option>Sedan</option><option>SUV / Innova</option><option>Ertiga / MPV</option><option>Force Traveller</option><option>Mini Bus</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Assigned Driver</label>
+        <select class="form-select" id="ev-driver"><option value="">Unassigned</option></select>
+      </div>
+      <input type="hidden" id="ev-id"/>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('edit-veh')">Cancel</button>
+        <button class="btn btn-red" onclick="saveEditVehicle()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Trip Modal -->
+<div class="modal-overlay" id="modal-edit-trip">
+  <div class="modal">
+    <div class="modal-title">Edit Trip<button class="modal-close" onclick="closeModal('edit-trip')">✕</button></div>
+    <div class="modal-form">
+      <div class="form-group"><label class="form-label">Trip Type</label>
+        <select class="form-select" id="et-type"><option value="pickup">Pickup</option><option value="drop">Drop</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Origin</label><input class="form-input" id="et-origin"/></div>
+      <div class="form-group"><label class="form-label">Destination</label><input class="form-input" id="et-dest"/></div>
+      <div class="form-group"><label class="form-label">Date &amp; Time</label><input class="form-input" id="et-datetime" type="datetime-local"/></div>
+      <div class="form-group"><label class="form-label">Shift</label>
+        <select class="form-select" id="et-shift">
+          <option value="">Select shift…</option>
+          <option>Morning (6 AM – 2 PM)</option>
+          <option>Afternoon (2 PM – 10 PM)</option>
+          <option>Night (10 PM – 6 AM)</option>
+          <option>General (9 AM – 6 PM)</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Driver</label><input class="form-input" id="et-driver"/></div>
+      <div class="form-group"><label class="form-label">Vehicle</label><input class="form-input" id="et-vehicle"/></div>
+      <input type="hidden" id="et-id"/>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('edit-trip')">Cancel</button>
+        <button class="btn btn-red" onclick="saveEditTrip()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Trip Detail Modal -->
+<div class="modal-overlay" id="modal-trip-detail">
+  <div class="modal trip-detail-modal" style="padding:0;overflow:hidden">
+    <div class="tdm-header">
+      <div class="tdm-badge" id="tdm-badge-wrap"></div>
+      <div class="tdm-title" id="tdm-title">Trip Details</div>
+      <div class="tdm-time" id="tdm-time"></div>
+    </div>
+    <div class="tdm-body">
+      <div class="tdm-section">
+        <div class="tdm-section-label">Route</div>
+        <div class="tdm-grid">
+          <div class="tdm-field"><div class="tdm-field-label">Origin</div><div class="tdm-field-val" id="tdm-origin">—</div></div>
+          <div class="tdm-field"><div class="tdm-field-label">Destination</div><div class="tdm-field-val" id="tdm-dest">—</div></div>
+        </div>
+      </div>
+      <div class="tdm-section">
+        <div class="tdm-section-label">Assignment</div>
+        <div class="tdm-grid">
+          <div class="tdm-field"><div class="tdm-field-label">Driver</div><div class="tdm-field-val" id="tdm-driver">—</div></div>
+          <div class="tdm-field"><div class="tdm-field-label">Vehicle</div><div class="tdm-field-val" id="tdm-vehicle">—</div></div>
+          <div class="tdm-field"><div class="tdm-field-label">Shift</div><div class="tdm-field-val" id="tdm-shift">—</div></div>
+          <div class="tdm-field"><div class="tdm-field-label">Trip Type</div><div class="tdm-field-val" id="tdm-type">—</div></div>
+        </div>
+      </div>
+      <div class="tdm-section">
+        <div class="tdm-section-label">Employees on this trip</div>
+        <div class="tdm-emp-chips" id="tdm-emps"></div>
+      </div>
+    </div>
+    <div style="padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--card2)">
+      <button class="btn btn-ghost" onclick="closeModal('trip-detail')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+
+// ===== DATA STORE =====
+let employees = [
+  { id:1, fname:'Priya', lname:'Nair', dept:'Engineering', addr:'Koramangala, Bengaluru', phone:'+91 98765 00001', lat:12.9352, lon:77.6245 },
+  { id:2, fname:'Arjun', lname:'Mehta', dept:'Operations', addr:'Whitefield, Bengaluru', phone:'+91 98765 00002', lat:12.9698, lon:77.7499 },
+  { id:3, fname:'Sneha', lname:'Rao', dept:'HR', addr:'Indiranagar, Bengaluru', phone:'+91 98765 00003', lat:12.9784, lon:77.6408 },
+];
+let drivers = [
+  { id:1, fname:'Rajan', lname:'Kumar', lic:'KA-01-2020-111111', phone:'+91 99887 00001', vehicle:'KA-01-CD-5678 – Maruti Ertiga' },
+  { id:2, fname:'Manoj', lname:'Singh', lic:'KA-05-2019-222222', phone:'+91 99887 00002', vehicle:'MH-12-AB-1234 – Toyota Innova' },
+];
+let trips = [];
+
+let tripState = {
+  type:'pickup', origin:'', dest:'', datetime:'', shift:'',
+  selectedEmps:[], selectedDriver:null, vehicle:'', notes:''
+};
+let currentStep = 1;
+let mapPinMode = null; // 'origin' | 'dest'
+let markers = { origin:null, dest:null, employees:[] };
+
+// ===== MAP INIT =====
+const map = L.map('map', { zoomControl:true }).setView([12.2958, 76.6394], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution:'© OpenStreetMap contributors', maxZoom:19
+}).addTo(map);
+
+const redIcon = L.divIcon({ html:'<div style="background:#e0191b;width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5)"></div>', className:'', iconSize:[18,18], iconAnchor:[9,9] });
+const blueIcon = L.divIcon({ html:'<div style="background:#1a78c2;width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5)"></div>', className:'', iconSize:[18,18], iconAnchor:[9,9] });
+const greenIcon = L.divIcon({ html:'<div style="background:#2ecc71;width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5)"></div>', className:'', iconSize:[18,18], iconAnchor:[9,9] });
+
+map.on('click', function(e) {
+  if (!mapPinMode) return;
+  const { lat, lng } = e.latlng;
+  reverseGeocode(lat, lng, mapPinMode);
+  placeMapMarker(mapPinMode, lat, lng);
+});
+
+function placeMapMarker(type, lat, lng) {
+  if (markers[type]) map.removeLayer(markers[type]);
+  const icon = type === 'origin' ? redIcon : blueIcon;
+  markers[type] = L.marker([lat,lng], { icon }).addTo(map)
+    .bindPopup(type === 'origin' ? '📍 Origin' : 'Destination').openPopup();
+  drawRoute();
+}
+
+async function reverseGeocode(lat, lng, field) {
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+    const d = await r.json();
+    const addr = d.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    document.getElementById(field === 'origin' ? 'loc-origin' : 'loc-dest').value = addr;
+    tripState[field === 'origin' ? 'origin' : 'dest'] = addr;
+    if (field === 'origin') document.getElementById('pin-origin').classList.add('active');
+    else document.getElementById('pin-dest').classList.add('active');
+    mapPinMode = null;
+    updateMapCursor();
+  } catch(e) {
+    const addr = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    document.getElementById(field === 'origin' ? 'loc-origin' : 'loc-dest').value = addr;
+  }
+}
+
+async function geocodeSearch() {
+  const q = document.getElementById('map-search').value.trim();
+  if (!q) return;
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`);
+    const d = await r.json();
+    if (d.length > 0) {
+      const { lat, lon, display_name } = d[0];
+      map.setView([lat, lon], 15);
+      if (mapPinMode) {
+        placeMapMarker(mapPinMode, parseFloat(lat), parseFloat(lon));
+        document.getElementById(mapPinMode === 'origin' ? 'loc-origin' : 'loc-dest').value = display_name;
+        tripState[mapPinMode === 'origin' ? 'origin' : 'dest'] = display_name;
+        mapPinMode = null; updateMapCursor();
+      } else {
+        // just pan
+        L.marker([lat,lon], { icon: greenIcon }).addTo(map).bindPopup(display_name).openPopup();
+      }
+    } else { showToast('Location not found. Try a different search.'); }
+  } catch(e) { showToast('Search error. Check connection.'); }
+}
+
+function setMapMode(mode) {
+  mapPinMode = mode;
+  updateMapCursor();
+  showToast(`Click on the map to set ${mode === 'origin' ? 'origin' : 'destination'} location`);
+}
+
+function updateMapCursor() {
+  map.getContainer().style.cursor = mapPinMode ? 'crosshair' : '';
+}
+
+let routeLine = null;
+function drawRoute() {
+  if (routeLine) map.removeLayer(routeLine);
+  if (markers.origin && markers.dest) {
+    const o = markers.origin.getLatLng();
+    const d = markers.dest.getLatLng();
+    routeLine = L.polyline([[o.lat,o.lng],[d.lat,d.lng]], { color:'#e0191b', weight:3, dashArray:'8,6', opacity:.8 }).addTo(map);
+    map.fitBounds([[o.lat,o.lng],[d.lat,d.lng]], { padding:[60,60] });
+  }
+}
+
+// ===== NAVIGATION =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+  const titles = {
+    map:'Route Planner', roster:'Roster & Trip Schedule',
+    employees:'Employees', drivers:'Drivers', settings:'Settings'
+  };
+  const subs = {
+    map:'Plan & assign employee pickup/drop trips',
+    roster:'View, export and manage all scheduled trips',
+    employees:'Manage employee profiles and addresses',
+    drivers:'Manage drivers and vehicle assignments',
+    settings:'Portal settings'
+  };
+  document.getElementById('page-title').textContent = titles[id]||id;
+  document.getElementById('page-sub').textContent = subs[id]||'';
+
+  if (id === 'employees') renderEmployeeCards();
+  if (id === 'drivers') renderDriverCards();
+  if (id === 'roster') renderRoster();
+  if (id === 'map') setTimeout(()=>map.invalidateSize(),100);
+}
+
+// ===== TRIP STEPS =====
+function goStep(n) {
+  // Validate before moving forward
+  if (n === 2) {
+    const origin = document.getElementById('loc-origin').value.trim();
+    const dest = document.getElementById('loc-dest').value.trim();
+    if (!origin || !dest) { showToast('Please set both origin and destination.'); return; }
+    tripState.origin = origin; tripState.dest = dest;
+    tripState.datetime = document.getElementById('trip-datetime').value;
+    tripState.shift = document.getElementById('trip-shift').value;
+    renderEmpList();
+  }
+  if (n === 3) {
+    if (tripState.selectedEmps.length === 0) { showToast('Select at least one employee.'); return; }
+    renderDrvList();
+  }
+  if (n === 4) {
+    if (!tripState.selectedDriver) { showToast('Please select a driver.'); return; }
+    updateSummary();
+  }
+
+  currentStep = n;
+  for (let i=1;i<=4;i++) {
+    document.getElementById('form-step-'+i).style.display = i===n ? 'flex':'none';
+    if (i===n) document.getElementById('form-step-'+i).style.flexDirection='column';
+    document.getElementById('form-step-'+i).style.gap = '14px';
+    const stepEl = document.getElementById('step-'+i);
+    stepEl.className = 'step' + (i<n?' done':(i===n?' active':''));
+  }
+}
+
+function startNewTrip() {
+  tripState = { type:'pickup', origin:'', dest:'', datetime:'', shift:'', selectedEmps:[], selectedDriver:null, vehicle:'', notes:'' };
+  document.getElementById('loc-origin').value='';
+  document.getElementById('loc-dest').value='';
+  document.getElementById('trip-datetime').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('trip-shift').value='';
+  document.getElementById('trip-notes').value='';
+  if(markers.origin){map.removeLayer(markers.origin);markers.origin=null;}
+  if(markers.dest){map.removeLayer(markers.dest);markers.dest=null;}
+  if(routeLine){map.removeLayer(routeLine);routeLine=null;}
+  // Clear optimizer
+  optimizedRouteData = null;
+  routeOptMarkers.forEach(m => map.removeLayer(m)); routeOptMarkers = [];
+  if(routeOptLine){map.removeLayer(routeOptLine);routeOptLine=null;}
+  const rob = document.getElementById('route-opt-banner'); if(rob) rob.style.display='none';
+  const ror = document.getElementById('pickup-order-result'); if(ror) ror.style.display='none';
+  const btnOpt = document.getElementById('btn-optimize-route'); if(btnOpt){btnOpt.disabled=false;btnOpt.innerHTML='⚡ Optimize';}
+  setTripType('pickup');
+  goStep(1);
+  showPage('map');
+}
+
+function setTripType(t) {
+  tripState.type = t;
+  document.getElementById('tt-pickup').className='trip-type-btn'+(t==='pickup'?' active':'');
+  document.getElementById('tt-drop').className='trip-type-btn'+(t==='drop'?' active':'');
+}
+
+function renderEmpList() {
+  const list = document.getElementById('emp-list');
+  list.innerHTML = employees.map(e => `
+    <div class="emp-card ${tripState.selectedEmps.includes(e.id)?'selected':''}" id="ec-${e.id}" onclick="toggleEmp(${e.id})">
+      <div class="emp-avatar">${e.fname[0]}${e.lname[0]}</div>
+      <div class="emp-info">
+        <div class="emp-name">${e.fname} ${e.lname}</div>
+        <div class="emp-addr">${e.addr}</div>
+      </div>
+      <div class="emp-check">✓</div>
+    </div>`).join('');
+  updateEmpCount();
+}
+
+function filterEmployees(q) {
+  const lq = q.toLowerCase();
+  employees.forEach(e => {
+    const el = document.getElementById('ec-'+e.id);
+    if (el) el.style.display = (e.fname+' '+e.lname+' '+e.dept+' '+e.addr).toLowerCase().includes(lq) ? '':'none';
+  });
+}
+
+function toggleEmp(id) {
+  const idx = tripState.selectedEmps.indexOf(id);
+  if (idx > -1) tripState.selectedEmps.splice(idx,1);
+  else tripState.selectedEmps.push(id);
+  document.getElementById('ec-'+id).classList.toggle('selected', tripState.selectedEmps.includes(id));
+  updateEmpCount();
+}
+
+function updateEmpCount() {
+  document.getElementById('selected-emp-count').textContent = `${tripState.selectedEmps.length} employee(s) selected`;
+  const banner = document.getElementById('route-opt-banner');
+  if (banner) {
+    banner.style.display = tripState.selectedEmps.length > 0 && tripState.origin ? 'flex' : 'none';
+  }
+}
+
+function renderDrvList() {
+  const list = document.getElementById('drv-list');
+  list.innerHTML = drivers.map(d => `
+    <div class="emp-card ${tripState.selectedDriver===d.id?'selected':''}" id="dc-${d.id}" onclick="selectDriver(${d.id})">
+      <div class="emp-avatar" style="background:#1a3a5c"></div>
+      <div class="emp-info">
+        <div class="emp-name">${d.fname} ${d.lname}</div>
+        <div class="emp-addr">${d.vehicle}</div>
+      </div>
+      <div class="emp-check">✓</div>
+    </div>`).join('');
+}
+
+function selectDriver(id) {
+  tripState.selectedDriver = id;
+  drivers.forEach(d => {
+    const el = document.getElementById('dc-'+d.id);
+    if(el) el.classList.toggle('selected', d.id===id);
+  });
+}
+
+function updateSummary() {
+  const d = tripState;
+  const drv = drivers.find(x=>x.id===d.selectedDriver);
+  document.getElementById('s-type').innerHTML = `<span class="status-badge ${d.type==='pickup'?'status-pickup':'status-drop'}">${d.type==='pickup'?'Pickup':'Drop'}</span>`;
+  document.getElementById('s-origin').textContent = d.origin || '—';
+  document.getElementById('s-dest').textContent = d.dest || '—';
+  document.getElementById('s-dt').textContent = d.datetime ? new Date(d.datetime).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}) : '—';
+  document.getElementById('s-emps').textContent = d.selectedEmps.length+' employees';
+  document.getElementById('s-driver').textContent = drv ? `${drv.fname} ${drv.lname}` : '—';
+}
+
+function confirmTrip() {
+  const vehicle = document.getElementById('trip-vehicle').value;
+  if (!vehicle) { showToast('Please select a vehicle.'); return; }
+  tripState.vehicle = vehicle;
+  tripState.notes = document.getElementById('trip-notes').value;
+
+  const drv = drivers.find(x=>x.id===tripState.selectedDriver);
+  const empNames = tripState.selectedEmps.map(id => {
+    const e = employees.find(x=>x.id===id);
+    return e ? e.fname+' '+e.lname : '';
+  }).join(', ');
+
+  trips.push({
+    id: trips.length+1,
+    datetime: tripState.datetime,
+    type: tripState.type,
+    employees: empNames,
+    origin: tripState.origin,
+    dest: tripState.dest,
+    driver: drv ? drv.fname+' '+drv.lname : '—',
+    vehicle: vehicle,
+    shift: tripState.shift,
+    notes: tripState.notes
+  });
+
+  document.getElementById('roster-badge').textContent = trips.length;
+  showToast('Trip confirmed! Redirecting to Roster…');
+  // clear form
+  tripState = { type:'pickup', origin:'', dest:'', datetime:'', shift:'', selectedEmps:[], selectedDriver:null, vehicle:'', notes:'' };
+  document.getElementById('loc-origin').value='';
+  document.getElementById('loc-dest').value='';
+  document.getElementById('trip-datetime').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('trip-shift').value='';
+  document.getElementById('trip-notes').value='';
+  if(markers.origin){map.removeLayer(markers.origin);markers.origin=null;}
+  if(markers.dest){map.removeLayer(markers.dest);markers.dest=null;}
+  if(routeLine){map.removeLayer(routeLine);routeLine=null;}
+  // Clear optimizer
+  optimizedRouteData = null;
+  routeOptMarkers.forEach(m => map.removeLayer(m)); routeOptMarkers = [];
+  if(routeOptLine){map.removeLayer(routeOptLine);routeOptLine=null;}
+  const rob2 = document.getElementById('route-opt-banner'); if(rob2) rob2.style.display='none';
+  const ror2 = document.getElementById('pickup-order-result'); if(ror2) ror2.style.display='none';
+  setTripType('pickup');
+  goStep(1);
+  setTimeout(()=>{ showPage('roster'); }, 1000);
+}
+
+// ===== ROSTER =====
+function renderRoster() {
+  const tbody = document.getElementById('roster-tbody');
+  document.getElementById('roster-count').textContent = `${trips.length} trip(s) scheduled`;
+  if (trips.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--grey-soft);padding:40px">No trips yet. Plan a trip from Route Planner.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = trips.map((t,i) => `
+    <tr class="tr-clickable" onclick="openTripDetail(${t.id},event)">
+      <td class="row-num">${i+1}</td>
+      <td>${t.datetime ? new Date(t.datetime).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'}) : '—'}</td>
+      <td><span class="status-badge ${t.type==='pickup'?'status-pickup':'status-drop'}">${t.type==='pickup'?'Pickup':'Drop'}</span></td>
+      <td>${t.employees}</td>
+      <td style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${t.origin}">${t.origin}</td>
+      <td style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${t.dest}">${t.dest}</td>
+      <td>${t.driver}</td>
+      <td style="font-size:12px">${t.vehicle}</td>
+      <td style="font-size:12px">${t.shift||'—'}</td>
+      <td class="td-actions"><button class="btn-edit-icon" onclick="editTrip(${t.id})" title="Edit">&#9998;</button><button class="btn-delete-icon" onclick="removeTrip(${t.id})" title="Delete">&#10005;</button></td>
+    </tr>`).join('');
+}
+
+// ===== CSV DOWNLOAD =====
+function downloadCSV() {
+  if (trips.length === 0) { showToast('No trips to export.'); return; }
+  const headers = ['#','Date & Time','Type','Employees','Origin','Destination','Driver','Vehicle','Shift'];
+  const rows = trips.map((t,i) => [
+    i+1,
+    t.datetime ? new Date(t.datetime).toLocaleString('en-IN') : '',
+    t.type,
+    `"${t.employees}"`,
+    `"${t.origin}"`,
+    `"${t.dest}"`,
+    t.driver,
+    `"${t.vehicle}"`,
+    t.shift||''
+  ]);
+  const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `SafeWheels_Roster_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSV downloaded!');
+}
+
+// ===== PDF DOWNLOAD =====
+function downloadPDF() {
+  if (trips.length === 0) { showToast('No trips to export.'); return; }
+  const w = window.open('','_blank','width=900,height=700');
+  const rows = trips.map((t,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${t.datetime ? new Date(t.datetime).toLocaleString('en-IN') : '—'}</td>
+      <td>${t.type}</td>
+      <td>${t.employees}</td>
+      <td>${t.origin}</td>
+      <td>${t.dest}</td>
+      <td>${t.driver}</td>
+      <td>${t.vehicle}</td>
+      <td>${t.shift||'—'}</td>
+    </tr>`).join('');
+  w.document.write(`<!DOCTYPE html><html><head><title>SafeWheels Roster</title>
+  <style>
+    body{font-family:sans-serif;padding:32px;color:#111;}
+    h1{color:#e0191b;font-size:22px;margin-bottom:4px;}
+    p{color:#666;font-size:13px;margin-bottom:20px;}
+    table{width:100%;border-collapse:collapse;font-size:12px;}
+    th{background:#e0191b;color:#fff;padding:9px 10px;text-align:left;}
+    td{padding:8px 10px;border-bottom:1px solid #eee;}
+    tr:nth-child(even) td{background:#fafafa;}
+  </style></head><body>
+  <h1> SafeWheels – Trip Roster</h1>
+  <p>Generated: ${new Date().toLocaleString('en-IN')} &nbsp;|&nbsp; Total Trips: ${trips.length}</p>
+  <table><thead><tr><th>#</th><th>Date/Time</th><th>Type</th><th>Employees</th><th>Origin</th><th>Destination</th><th>Driver</th><th>Vehicle</th><th>Shift</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <script>window.onload=function(){window.print()}<\/script>
+  </body></html>`);
+  w.document.close();
+  showToast('PDF print dialog opened!');
+}
+
+// ===== EMPLOYEE CARDS =====
+function renderEmployeeCards() {
+  const grid = document.getElementById('emp-cards');
+  document.getElementById('emp-badge').textContent = employees.length;
+  grid.innerHTML = employees.map(e => `
+    <div class="person-card">
+      <div class="person-card-top">
+        <div class="person-avatar-lg">${e.fname[0]}${e.lname[0]}</div>
+        <div>
+          <div class="person-name">${e.fname} ${e.lname}</div>
+          <div class="person-role">${e.dept}</div>
+        </div>
+      </div>
+      <div class="person-meta">
+        <div class="person-meta-row"><span>Address</span><span>${e.addr}</span></div>
+        <div class="person-meta-row"><span>Phone</span><span>${e.phone}</span></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-edit" onclick="editEmployee(${e.id})">Edit</button>
+        <button class="btn-delete" onclick="removeEmployee(${e.id})">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+
+function removeTrip(id) {
+  trips = trips.filter(t=>t.id!==id);
+  document.getElementById('roster-badge').textContent = trips.length;
+  document.getElementById('roster-count').textContent = trips.length + ' trip(s) total';
+  filteredRenderRoster();
+  showToast('Trip deleted.');
+}
+
+function removeEmployee(id) {
+  employees = employees.filter(e=>e.id!==id);
+  renderEmployeeCards();
+  showToast('Employee removed.');
+}
+
+// ===== DRIVER CARDS =====
+function renderDriverCards() {
+  const grid = document.getElementById('drv-cards');
+  document.getElementById('drv-badge').textContent = drivers.length;
+  grid.innerHTML = drivers.map(d => `
+    <div class="person-card">
+      <div class="person-card-top">
+        <div class="person-avatar-lg driver-av"></div>
+        <div>
+          <div class="person-name">${d.fname} ${d.lname}</div>
+          <div class="person-role">Driver</div>
+        </div>
+      </div>
+      <div class="person-meta">
+        <div class="person-meta-row"><span>License</span><span>${d.lic}</span></div>
+        <div class="person-meta-row"><span>Phone</span><span>${d.phone}</span></div>
+        <div class="person-meta-row"><span>Vehicle</span><span>${d.vehicle}</span></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-edit" onclick="editDriver(${d.id})">Edit</button>
+        <button class="btn-delete" onclick="removeDriver(${d.id})">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function removeDriver(id) {
+  drivers = drivers.filter(d=>d.id!==id);
+  renderDriverCards();
+  showToast('Driver removed.');
+}
+
+// ===== MODALS =====
+function openModal(type) { document.getElementById('modal-'+type).classList.add('open'); }
+function closeModal(type) { document.getElementById('modal-'+type).classList.remove('open'); }
+
+function saveEmployee() {
+  const fn = document.getElementById('ne-fname').value.trim();
+  const ln = document.getElementById('ne-lname').value.trim();
+  if (!fn || !ln) { showToast('Please fill first and last name.'); return; }
+  const newEmp = {
+    id: Date.now(),
+    fname: fn, lname: ln,
+    dept: document.getElementById('ne-dept').value,
+    addr: document.getElementById('ne-addr').value || 'Bengaluru',
+    phone: document.getElementById('ne-phone').value || '—',
+    lat: null, lon: null
+  };
+  employees.push(newEmp);
+  // Geocode in background
+  geocodeAddress(newEmp.addr).then(geo => {
+    if (geo) { newEmp.lat = geo.lat; newEmp.lon = geo.lon; }
+  });
+  document.getElementById('emp-badge').textContent = employees.length;
+  closeModal('emp');
+  ['ne-fname','ne-lname','ne-addr','ne-phone'].forEach(id=>document.getElementById(id).value='');
+  showToast('Employee added!');
+  if (document.getElementById('page-employees').classList.contains('active')) renderEmployeeCards();
+}
+
+function saveDriver() {
+  const fn = document.getElementById('nd-fname').value.trim();
+  const ln = document.getElementById('nd-lname').value.trim();
+  if (!fn || !ln) { showToast('Please fill first and last name.'); return; }
+  drivers.push({
+    id: Date.now(),
+    fname: fn, lname: ln,
+    lic: document.getElementById('nd-lic').value || '—',
+    phone: document.getElementById('nd-phone').value || '—',
+    vehicle: document.getElementById('nd-vehicle').value
+  });
+  document.getElementById('drv-badge').textContent = drivers.length;
+  closeModal('drv');
+  ['nd-fname','nd-lname','nd-lic','nd-phone'].forEach(id=>document.getElementById(id).value='');
+  showToast('Driver added!');
+  if (document.getElementById('page-drivers').classList.contains('active')) renderDriverCards();
+}
+
+// close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
+});
+
+// ===== TOAST =====
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3000);
+}
+
+// Init datetime to current date+time
+const now = new Date();
+document.getElementById('trip-datetime').value = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+
+
+// ===== VEHICLES =====
+let vehicles = [
+  { id:1, plate:'MH-12-AB-1234', model:'Toyota Innova', seats:7, type:'SUV / Innova', driver:'Rajan Kumar' },
+  { id:2, plate:'KA-01-CD-5678', model:'Maruti Ertiga', seats:6, type:'Ertiga / MPV', driver:'Manoj Singh' },
+  { id:3, plate:'KA-05-EF-9012', model:'Force Traveller', seats:12, type:'Force Traveller', driver:'' },
+  { id:4, plate:'DL-3C-GH-3456', model:'Tata Winger', seats:9, type:'Mini Bus', driver:'' },
+];
+
+function renderVehicleCards() {
+  const grid = document.getElementById('veh-cards');
+  if (!grid) return;
+  document.getElementById('veh-badge').textContent = vehicles.length;
+  if (!vehicles.length) { grid.innerHTML = '<div style="color:var(--grey-soft);font-size:13px;padding:24px">No vehicles added yet.</div>'; return; }
+  grid.innerHTML = vehicles.map(v => `
+    <div class="person-card">
+      <div class="person-card-top">
+        <div class="person-avatar-lg" style="background:#1a3060;font-size:20px"></div>
+        <div><div class="person-name">${v.plate}</div><div class="person-role">${v.model}</div></div>
+      </div>
+      <div class="person-meta">
+        <div class="person-meta-row"><span>Seats</span><span>${v.seats}</span></div>
+        <div class="person-meta-row"><span>Type</span><span>${v.type}</span></div>
+        <div class="person-meta-row"><span>Driver</span><span>${v.driver||'Unassigned'}</span></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-edit" onclick="editVehicle(${v.id})">Edit</button>
+        <button class="btn-delete" onclick="removeVehicle(${v.id})">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function removeVehicle(id) {
+  vehicles = vehicles.filter(v=>v.id!==id);
+  renderVehicleCards();
+  showToast('Vehicle removed.');
+}
+
+function saveVehicle() {
+  const plate = document.getElementById('nv-plate').value.trim();
+  const model = document.getElementById('nv-model').value.trim();
+  if (!plate || !model) { showToast('Please fill plate and model.'); return; }
+  vehicles.push({ id:Date.now(), plate, model,
+    seats: parseInt(document.getElementById('nv-seats').value)||0,
+    type: document.getElementById('nv-type').value,
+    driver: document.getElementById('nv-driver').value
+  });
+  document.getElementById('veh-badge').textContent = vehicles.length;
+  closeModal('veh');
+  ['nv-plate','nv-model','nv-seats'].forEach(id=>document.getElementById(id).value='');
+  showToast('Vehicle added!');
+  if (document.getElementById('page-vehicles').classList.contains('active')) renderVehicleCards();
+}
+
+// ===== DATE FILTER =====
+let activeDateFilter = 'today';
+function setDateFilter(f) {
+  activeDateFilter = f;
+  ['today','5','30'].forEach(id => {
+    const el = document.getElementById('dp-'+id);
+    if (el) el.className = 'date-pill' + (id===f?' active':'');
+  });
+  if (document.getElementById('page-roster').classList.contains('active')) filteredRenderRoster();
+  showToast('Showing: ' + (f==='today'?'Today':f==='5'?'Last 5 Days':'Last 30 Days'));
+}
+
+function filteredRenderRoster() {
+  const tbody = document.getElementById('roster-tbody');
+  const now = new Date();
+  document.getElementById('roster-count').textContent = trips.length + ' trip(s) total';
+  if (!trips.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--grey-soft);padding:40px">No trips yet. Plan a trip from Route Planner.</td></tr>';
+    return;
+  }
+  const filtered = trips.filter(t => {
+    if (!t.datetime) return activeDateFilter === 'today' ? false : true;
+    const diff = (now - new Date(t.datetime)) / 86400000;
+    if (activeDateFilter==='today') return diff < 1;
+    if (activeDateFilter==='5') return diff <= 5;
+    return diff <= 30;
+  });
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--grey-soft);padding:40px">No trips in selected period.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map((t,i)=>`<tr class="tr-clickable" onclick="openTripDetail(${t.id},event)">
+    <td class="row-num">${i+1}</td>
+    <td>${t.datetime?new Date(t.datetime).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'}):'—'}</td>
+    <td><span class="status-badge ${t.type==='pickup'?'status-pickup':'status-drop'}">${t.type==='pickup'?'Pickup':'Drop'}</span></td>
+    <td>${t.employees}</td>
+    <td style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.origin}</td>
+    <td style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.dest}</td>
+    <td>${t.driver}</td>
+    <td style="font-size:12px">${t.vehicle}</td>
+    <td style="font-size:12px">${t.shift||'—'}</td>
+    <td class="td-actions"><button class="btn-edit-icon" onclick="editTrip(${t.id})" title="Edit">&#9998;</button><button class="btn-delete-icon" onclick="removeTrip(${t.id})" title="Delete">&#10005;</button></td>
+  </tr>`).join('');
+}
+
+// ===== PATCH showPage to handle vehicles + update top nav active state =====
+const _origShowPage = window.showPage;
+window.showPage = function(id) {
+  _origShowPage(id);
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  const t = document.getElementById('nvi-'+id);
+  if (t) t.classList.add('active');
+  if (id==='vehicles') renderVehicleCards();
+  if (id==='roster') filteredRenderRoster();
+};
+
+// ===== PATCH openModal to populate driver dropdown in vehicle modal =====
+const _origOpenModal = window.openModal;
+window.openModal = function(type) {
+  if (type==='veh') {
+    const sel = document.getElementById('nv-driver');
+    sel.innerHTML = '<option value="">Unassigned</option>' + drivers.map(d=>`<option>${d.fname} ${d.lname}</option>`).join('');
+  }
+  _origOpenModal(type);
+};
+
+// Init vehicle badge
+document.getElementById('veh-badge').textContent = vehicles.length;
+
+
+// ===== EDIT FUNCTIONS =====
+
+// EMPLOYEE EDIT
+function editEmployee(id) {
+  const e = employees.find(x=>x.id===id);
+  if (!e) return;
+  document.getElementById('ee-id').value = id;
+  document.getElementById('ee-fname').value = e.fname;
+  document.getElementById('ee-lname').value = e.lname;
+  document.getElementById('ee-dept').value = e.dept;
+  document.getElementById('ee-addr').value = e.addr;
+  document.getElementById('ee-phone').value = e.phone;
+  document.getElementById('modal-edit-emp').classList.add('open');
+}
+function saveEditEmployee() {
+  const id = parseInt(document.getElementById('ee-id').value);
+  const e = employees.find(x=>x.id===id);
+  if (!e) return;
+  const newAddr = document.getElementById('ee-addr').value.trim() || e.addr;
+  const addrChanged = newAddr !== e.addr;
+  e.fname = document.getElementById('ee-fname').value.trim() || e.fname;
+  e.lname = document.getElementById('ee-lname').value.trim() || e.lname;
+  e.dept  = document.getElementById('ee-dept').value;
+  e.addr  = newAddr;
+  e.phone = document.getElementById('ee-phone').value.trim() || e.phone;
+  if (addrChanged) {
+    e.lat = null; e.lon = null;
+    geocodeAddress(e.addr).then(geo => { if (geo) { e.lat = geo.lat; e.lon = geo.lon; } });
+  }
+  closeModal('edit-emp');
+  renderEmployeeCards();
+  showToast('Employee updated.');
+}
+
+// DRIVER EDIT
+function editDriver(id) {
+  const d = drivers.find(x=>x.id===id);
+  if (!d) return;
+  document.getElementById('ed-id').value = id;
+  document.getElementById('ed-fname').value = d.fname;
+  document.getElementById('ed-lname').value = d.lname;
+  document.getElementById('ed-lic').value = d.lic;
+  document.getElementById('ed-phone').value = d.phone;
+  document.getElementById('ed-vehicle').value = d.vehicle;
+  document.getElementById('modal-edit-drv').classList.add('open');
+}
+function saveEditDriver() {
+  const id = parseInt(document.getElementById('ed-id').value);
+  const d = drivers.find(x=>x.id===id);
+  if (!d) return;
+  d.fname   = document.getElementById('ed-fname').value.trim() || d.fname;
+  d.lname   = document.getElementById('ed-lname').value.trim() || d.lname;
+  d.lic     = document.getElementById('ed-lic').value.trim() || d.lic;
+  d.phone   = document.getElementById('ed-phone').value.trim() || d.phone;
+  d.vehicle = document.getElementById('ed-vehicle').value;
+  closeModal('edit-drv');
+  renderDriverCards();
+  showToast('Driver updated.');
+}
+
+// VEHICLE EDIT
+function editVehicle(id) {
+  const v = vehicles.find(x=>x.id===id);
+  if (!v) return;
+  document.getElementById('ev-id').value = id;
+  document.getElementById('ev-plate').value = v.plate;
+  document.getElementById('ev-model').value = v.model;
+  document.getElementById('ev-seats').value = v.seats;
+  document.getElementById('ev-type').value = v.type;
+  // populate driver dropdown
+  const sel = document.getElementById('ev-driver');
+  sel.innerHTML = '<option value="">Unassigned</option>' + drivers.map(d=>`<option${d.fname+' '+d.lname===v.driver?' selected':''}>${d.fname} ${d.lname}</option>`).join('');
+  sel.value = v.driver || '';
+  document.getElementById('modal-edit-veh').classList.add('open');
+}
+function saveEditVehicle() {
+  const id = parseInt(document.getElementById('ev-id').value);
+  const v = vehicles.find(x=>x.id===id);
+  if (!v) return;
+  v.plate  = document.getElementById('ev-plate').value.trim() || v.plate;
+  v.model  = document.getElementById('ev-model').value.trim() || v.model;
+  v.seats  = parseInt(document.getElementById('ev-seats').value) || v.seats;
+  v.type   = document.getElementById('ev-type').value;
+  v.driver = document.getElementById('ev-driver').value;
+  closeModal('edit-veh');
+  renderVehicleCards();
+  showToast('Vehicle updated.');
+}
+
+// TRIP EDIT
+function editTrip(id) {
+  const t = trips.find(x=>x.id===id);
+  if (!t) return;
+  document.getElementById('et-id').value = id;
+  document.getElementById('et-type').value = t.type;
+  document.getElementById('et-origin').value = t.origin;
+  document.getElementById('et-dest').value = t.dest;
+  document.getElementById('et-datetime').value = t.datetime || '';
+  document.getElementById('et-shift').value = t.shift || '';
+  document.getElementById('et-driver').value = t.driver;
+  document.getElementById('et-vehicle').value = t.vehicle;
+  document.getElementById('modal-edit-trip').classList.add('open');
+}
+function saveEditTrip() {
+  const id = parseInt(document.getElementById('et-id').value);
+  const t = trips.find(x=>x.id===id);
+  if (!t) return;
+  t.type     = document.getElementById('et-type').value;
+  t.origin   = document.getElementById('et-origin').value.trim() || t.origin;
+  t.dest     = document.getElementById('et-dest').value.trim() || t.dest;
+  t.datetime = document.getElementById('et-datetime').value || t.datetime;
+  t.shift    = document.getElementById('et-shift').value;
+  t.driver   = document.getElementById('et-driver').value.trim() || t.driver;
+  t.vehicle  = document.getElementById('et-vehicle').value.trim() || t.vehicle;
+  closeModal('edit-trip');
+  filteredRenderRoster();
+  showToast('Trip updated.');
+}
+
+
+// ===== TRIP DETAIL MODAL =====
+function openTripDetail(id, e) {
+  // don't trigger if clicking action buttons
+  if (e && e.target.closest('.td-actions')) return;
+  const t = trips.find(x=>x.id===id);
+  if (!t) return;
+  const isPickup = t.type === 'pickup';
+  document.getElementById('tdm-badge-wrap').innerHTML =
+    '<span class="status-badge ' + (isPickup?'status-pickup':'status-drop') + '">' + (isPickup?'Pickup':'Drop') + '</span>';
+  document.getElementById('tdm-title').textContent = (isPickup ? 'Pickup' : 'Drop') + ' Trip #' + id;
+  document.getElementById('tdm-time').textContent = t.datetime
+    ? new Date(t.datetime).toLocaleString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    : 'No date set';
+  document.getElementById('tdm-origin').textContent   = t.origin   || '—';
+  document.getElementById('tdm-dest').textContent     = t.dest     || '—';
+  document.getElementById('tdm-driver').textContent   = t.driver   || '—';
+  document.getElementById('tdm-vehicle').textContent  = t.vehicle  || '—';
+  document.getElementById('tdm-shift').textContent    = t.shift    || '—';
+  document.getElementById('tdm-type').textContent     = isPickup ? 'Home → Office' : 'Office → Home';
+  const empNames = (t.employees || '').split(',').map(s=>s.trim()).filter(Boolean);
+  document.getElementById('tdm-emps').innerHTML = empNames.length
+    ? empNames.map(n=>'<span class="tdm-emp-chip">'+n+'</span>').join('')
+    : '<span style="color:var(--grey-soft);font-size:12px">No employees listed</span>';
+  document.getElementById('modal-trip-detail').classList.add('open');
+}
+
+// ===== SELECT ALL EMPLOYEES =====
+let allSelected = false;
+function toggleSelectAll() {
+  allSelected = !allSelected;
+  const btn = document.getElementById('sel-all-btn');
+  if (allSelected) {
+    tripState.selectedEmps = employees.map(e=>e.id);
+    btn.textContent = 'Deselect All';
+  } else {
+    tripState.selectedEmps = [];
+    btn.textContent = 'Select All';
+  }
+  // re-render to reflect selection
+  renderEmpList();
+  updateEmpCount();
+}
+
+
+// ===== ROUTE OPTIMIZATION ENGINE =====
+let optimizedRouteData = null; // store last optimization result
+let routeOptMarkers = [];       // numbered markers on map
+let routeOptLine = null;        // optimized polyline
+
+// Haversine distance in km between two lat/lon points
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Geocode an address string to {lat, lon} using Nominatim
+async function geocodeAddress(addr) {
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(addr) + '&limit=1&countrycodes=in');
+    const d = await r.json();
+    if (d && d.length > 0) return { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon) };
+  } catch(e) {}
+  return null;
+}
+
+// Nearest-neighbor greedy TSP: given start, list of stops, find shortest order
+function nearestNeighborTSP(start, stops) {
+  const remaining = [...stops];
+  const ordered = [];
+  let current = start;
+  while (remaining.length > 0) {
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < remaining.length; i++) {
+      const d = haversineKm(current.lat, current.lon, remaining[i].lat, remaining[i].lon);
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
+    }
+    ordered.push({ ...remaining[bestIdx], distFromPrev: bestDist });
+    current = remaining[bestIdx];
+    remaining.splice(bestIdx, 1);
+  }
+  return ordered;
+}
+
+// Draw numbered markers + polyline for optimized route on map
+function drawOptimizedRouteOnMap(startLatLon, orderedEmps, destLatLon) {
+  // Clear old opt markers
+  routeOptMarkers.forEach(m => map.removeLayer(m));
+  routeOptMarkers = [];
+  if (routeOptLine) { map.removeLayer(routeOptLine); routeOptLine = null; }
+
+  const allPoints = [startLatLon, ...orderedEmps.map(e => ({ lat: e.lat, lon: e.lon })), destLatLon];
+  const latlngs = allPoints.map(p => [p.lat, p.lon]);
+
+  // Draw polyline
+  routeOptLine = L.polyline(latlngs, { color:'#f39c12', weight:3, dashArray:'6,5', opacity:.85 }).addTo(map);
+
+  // Place numbered markers for each employee stop
+  orderedEmps.forEach((emp, idx) => {
+    const num = idx + 1;
+    const icon = L.divIcon({
+      html: `<div style="background:#e0191b;color:#fff;width:24px;height:24px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.5)">${num}</div>`,
+      className:'', iconSize:[24,24], iconAnchor:[12,12]
+    });
+    const m = L.marker([emp.lat, emp.lon], { icon })
+      .bindPopup(`<b>Stop ${num}: ${emp.fname} ${emp.lname}</b><br>${emp.addr}`)
+      .addTo(map);
+    routeOptMarkers.push(m);
+  });
+
+  map.fitBounds(latlngs, { padding:[50,50] });
+}
+
+// Main optimize function
+async function optimizeRoute() {
+  const btn = document.getElementById('btn-optimize-route');
+  const resultBox = document.getElementById('pickup-order-result');
+  const orderList = document.getElementById('pickup-order-list');
+
+  if (tripState.selectedEmps.length === 0) { showToast('Select at least one employee.'); return; }
+  if (!tripState.origin) { showToast('Set a pickup origin first.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Optimizing…';
+  resultBox.style.display = 'none';
+
+  // 1. Geocode origin (driver start) if needed
+  let startPoint = null;
+  if (markers.origin) {
+    const ll = markers.origin.getLatLng();
+    startPoint = { lat: ll.lat, lon: ll.lng };
+  } else {
+    showToast('Please set origin on map first.');
+    btn.disabled = false; btn.innerHTML = '⚡ Optimize'; return;
+  }
+
+  // 2. Geocode destination
+  let destPoint = null;
+  if (markers.dest) {
+    const ll = markers.dest.getLatLng();
+    destPoint = { lat: ll.lat, lon: ll.lng };
+  }
+
+  // 3. Get selected employees with lat/lon — geocode any missing ones
+  const selEmps = tripState.selectedEmps.map(id => employees.find(e => e.id === id)).filter(Boolean);
+
+  showToast('Geocoding employee addresses…');
+  for (let emp of selEmps) {
+    if (!emp.lat || !emp.lon) {
+      const geo = await geocodeAddress(emp.addr);
+      if (geo) { emp.lat = geo.lat; emp.lon = geo.lon; }
+      else { emp.lat = startPoint.lat + (Math.random()-.5)*.02; emp.lon = startPoint.lon + (Math.random()-.5)*.02; }
+    }
+  }
+
+  // 4. Run nearest-neighbor TSP
+  const ordered = nearestNeighborTSP(startPoint, selEmps);
+
+  // 5. Add dist from last emp to destination
+  let totalDist = 0;
+  ordered.forEach(e => { totalDist += e.distFromPrev; });
+  let destDist = 0;
+  if (destPoint && ordered.length > 0) {
+    const last = ordered[ordered.length - 1];
+    destDist = haversineKm(last.lat, last.lon, destPoint.lat, destPoint.lon);
+    totalDist += destDist;
+  }
+
+  // 6. Store and render
+  optimizedRouteData = { startPoint, ordered, destPoint, destDist, totalDist };
+
+  // Render order list
+  let html = ordered.map((emp, idx) => `
+    <div class="pickup-order-row">
+      <div class="pickup-num">${idx+1}</div>
+      <div class="pickup-emp-info">
+        <div class="pickup-emp-name">${emp.fname} ${emp.lname} <span style="color:var(--grey-soft);font-size:10px">(${emp.dept})</span></div>
+        <div class="pickup-emp-addr">${emp.addr}</div>
+      </div>
+      <div class="pickup-dist">
+        <strong>${emp.distFromPrev.toFixed(1)} km</strong>
+        from prev
+      </div>
+    </div>`).join('');
+
+  if (destPoint) {
+    html += `<div class="pickup-order-row" style="background:rgba(26,120,194,.06)">
+      <div class="pickup-num dest">🏁</div>
+      <div class="pickup-emp-info">
+        <div class="pickup-emp-name">Destination</div>
+        <div class="pickup-emp-addr">${tripState.dest || 'Drop-off point'}</div>
+      </div>
+      <div class="pickup-dist"><strong>${destDist.toFixed(1)} km</strong>from last</div>
+    </div>`;
+  }
+
+  orderList.innerHTML = html;
+  document.getElementById('opt-total-dist').textContent = totalDist.toFixed(1) + ' km';
+  resultBox.style.display = 'block';
+
+  // 7. Draw on map
+  drawOptimizedRouteOnMap(startPoint, ordered, destPoint || startPoint);
+
+  btn.disabled = false;
+  btn.innerHTML = '⚡ Re-Optimize';
+  showToast('Route optimized! ' + ordered.length + ' stops sorted.');
+}
+
+// Download a PDF showing the optimized pickup order
+function downloadRoutePDF() {
+  if (!optimizedRouteData) { showToast('Run optimization first.'); return; }
+  const { ordered, destPoint, totalDist } = optimizedRouteData;
+  const drv = drivers.find(x => x.id === tripState.selectedDriver);
+  const drvName = drv ? drv.fname + ' ' + drv.lname : 'Assigned Driver';
+
+  const rows = ordered.map((emp, idx) => `
+    <tr>
+      <td style="text-align:center;font-weight:700;color:#e0191b">${idx+1}</td>
+      <td><strong>${emp.fname} ${emp.lname}</strong></td>
+      <td>${emp.dept}</td>
+      <td>${emp.addr}</td>
+      <td style="text-align:center">${emp.phone || '—'}</td>
+      <td style="text-align:center;color:#e67e22"><strong>${emp.distFromPrev.toFixed(1)} km</strong></td>
+    </tr>`).join('');
+
+  const destRow = destPoint ? `
+    <tr style="background:#f0f7ff">
+      <td style="text-align:center;font-weight:700;color:#1a78c2">🏁</td>
+      <td colspan="3"><strong>Destination: ${tripState.dest || 'Drop-off'}</strong></td>
+      <td></td>
+      <td style="text-align:center;color:#1a78c2"><strong>${optimizedRouteData.destDist.toFixed(1)} km</strong></td>
+    </tr>` : '';
+
+  const dateStr = tripState.datetime ? new Date(tripState.datetime).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}) : new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><title>SafeWheels – Optimized Route</title>
+  <style>
+    body{font-family:sans-serif;padding:32px;color:#111;margin:0;}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+    h1{color:#e0191b;font-size:22px;margin:0;}
+    .logo-box{background:#e0191b;color:#fff;padding:6px 12px;border-radius:6px;font-weight:700;font-size:14px;}
+    .meta{color:#666;font-size:12px;margin-bottom:24px;padding:10px 14px;background:#f9f9f9;border-left:3px solid #e0191b;border-radius:0 6px 6px 0;}
+    .meta span{margin-right:20px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th{background:#e0191b;color:#fff;padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;}
+    td{padding:9px 12px;border-bottom:1px solid #eee;vertical-align:middle;}
+    tr:nth-child(even) td{background:#fafafa;}
+    .total-row td{background:#fff8f0;font-weight:700;color:#e67e22;border-top:2px solid #e67e22;}
+    .footer{margin-top:24px;font-size:11px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:12px;}
+    .stop-badge{display:inline-block;width:24px;height:24px;background:#e0191b;color:#fff;border-radius:50%;text-align:center;line-height:24px;font-weight:700;font-size:12px;}
+  </style></head><body>
+  <div class="header">
+    <h1>🚌 SafeWheels – Optimized Pickup Route</h1>
+    <div class="logo-box">SW</div>
+  </div>
+  <div class="meta">
+    <span>📅 <b>Date:</b> ${dateStr}</span>
+    <span>🚗 <b>Driver:</b> ${drvName}</span>
+    <span>📍 <b>Origin:</b> ${tripState.origin || '—'}</span>
+    <span>🏁 <b>Destination:</b> ${tripState.dest || '—'}</span>
+    <span>👥 <b>Passengers:</b> ${ordered.length}</span>
+  </div>
+  <table>
+    <thead><tr>
+      <th style="width:40px">Stop</th>
+      <th>Employee</th>
+      <th>Department</th>
+      <th>Pickup Address</th>
+      <th style="width:110px;text-align:center">Phone</th>
+      <th style="width:80px;text-align:center">Distance</th>
+    </tr></thead>
+    <tbody>
+      ${rows}
+      ${destRow}
+      <tr class="total-row">
+        <td colspan="5" style="text-align:right;padding-right:16px">Total Estimated Distance</td>
+        <td style="text-align:center">${totalDist.toFixed(1)} km</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="footer">Generated by SafeWheels Employee Transport Portal • ${new Date().toLocaleString('en-IN')}</div>
+  <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`);
+  w.document.close();
+}
+
+// ===== MAP DUAL SEARCH WITH AUTOCOMPLETE =====
+let suggestTimers = {};
+let suggestResults = { pickup: [], drop: [] };
+
+function mapSuggest(type) {
+  var inputId = type === 'pickup' ? 'map-search-pickup' : 'map-search-drop';
+  var listId  = type === 'pickup' ? 'suggest-pickup'    : 'suggest-drop';
+  var q = document.getElementById(inputId).value.trim();
+  var list = document.getElementById(listId);
+
+  if (q.length < 2) { list.style.display = 'none'; return; }
+
+  list.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--grey-soft)">Searching…</div>';
+  list.style.display = 'block';
+
+  clearTimeout(suggestTimers[type]);
+  suggestTimers[type] = setTimeout(function() {
+    // Photon is built for autocomplete — handles prefix queries like "boga" perfectly
+    // Bias results towards Mysore (lat/lon) but show all India results
+    var url = 'https://photon.komoot.io/api/'
+      + '?q=' + encodeURIComponent(q)
+      + '&lat=12.2958&lon=76.6394'
+      + '&limit=8&lang=en';
+
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        // Filter to India only
+        var features = (data.features || []).filter(function(f) {
+          return f.properties && f.properties.countrycode === 'IN';
+        });
+        suggestResults[type] = features;
+        renderSuggestions(type, features, q);
+      })
+      .catch(function() {
+        list.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--grey-soft)">Network error. Check connection.</div>';
+      });
+  }, 200);
+}
+
+function renderSuggestions(type, features, q) {
+  var listId = type === 'pickup' ? 'suggest-pickup' : 'suggest-drop';
+  var list = document.getElementById(listId);
+  if (!features || !features.length) {
+    list.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--grey-soft)">No places found for “' + q + '”</div>';
+    list.style.display = 'block';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < features.length; i++) {
+    var f = features[i];
+    var p = f.properties;
+    var name = p.name || p.street || p.city || '';
+    if (!name) continue;
+    // Build subtitle: street/locality, city, state
+    var subParts = [];
+    if (p.street && p.street !== name) subParts.push(p.street);
+    if (p.city && p.city !== name) subParts.push(p.city);
+    else if (p.county && p.county !== name) subParts.push(p.county);
+    if (p.state && p.state !== name) subParts.push(p.state);
+    var sub = subParts.slice(0, 2).join(', ');
+    // Highlight matched text
+    var safe = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var re = new RegExp('(' + safe + ')', 'gi');
+    var hl = name.replace(re, '<strong>$1</strong>');
+    html += '<div class="map-suggest-item" data-type="' + type + '" data-idx="' + i + '">'
+          + '<div style="flex:1;min-width:0;cursor:pointer" onclick="pickSuggestion(this.parentNode)">'
+          + hl
+          + (sub ? '<div class="suggest-sub">' + sub + '</div>' : '')
+          + '</div>'
+          + '<button class="suggest-save-btn" data-savetype="' + type + '" data-saveidx="' + i + '" onclick="handleSaveBtn(this)">&#9733; Save</button>'
+          + '</div>';
+  }
+  list.innerHTML = html || '<div style="padding:10px 14px;font-size:12px;color:var(--grey-soft)">No places found</div>';
+  list.style.display = 'block';
+}
+
+function pickSuggestion(el) {
+  // el might be the inner div — walk up to find the data attributes
+  while (el && !el.getAttribute('data-type')) el = el.parentNode;
+  if (!el) return;
+  var type = el.getAttribute('data-type');
+  var idx  = parseInt(el.getAttribute('data-idx'));
+  var feature = suggestResults[type][idx];
+  if (!feature) return;
+  var coords = feature.geometry.coordinates; // [lon, lat]
+  var p = feature.properties;
+  // Build a clean display name
+  var parts = [];
+  if (p.name) parts.push(p.name);
+  if (p.street && p.street !== p.name) parts.push(p.street);
+  if (p.city && p.city !== p.name) parts.push(p.city);
+  if (p.state) parts.push(p.state);
+  var displayName = parts.join(', ');
+  applyLocation(type, coords[1], coords[0], displayName);
+}
+
+function applyLocation(type, lat, lon, displayName) {
+  var inputId   = type === 'pickup' ? 'map-search-pickup' : 'map-search-drop';
+  var listId    = type === 'pickup' ? 'suggest-pickup'    : 'suggest-drop';
+  var field     = type === 'pickup' ? 'origin'             : 'dest';
+  var formId    = type === 'pickup' ? 'loc-origin'         : 'loc-dest';
+  var pinBtnId  = type === 'pickup' ? 'pin-origin'         : 'pin-dest';
+
+  document.getElementById(inputId).value = displayName;
+  document.getElementById(inputId).classList.add('has-val');
+  document.getElementById(listId).style.display = 'none';
+
+  placeMapMarker(field, lat, lon);
+
+  var formField = document.getElementById(formId);
+  if (formField) { formField.value = displayName; }
+  tripState[field] = displayName;
+
+  var pinBtn = document.getElementById(pinBtnId);
+  if (pinBtn) pinBtn.classList.add('active');
+
+  map.flyTo([lat, lon], 15, { duration: 0.8 });
+}
+
+function pinFromSearch(type) {
+  var inputId = type === 'pickup' ? 'map-search-pickup' : 'map-search-drop';
+  var q = document.getElementById(inputId).value.trim();
+  if (!q) return;
+  fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lat=12.2958&lon=76.6394&limit=1&lang=en')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var features = (data.features || []).filter(function(f) { return f.properties.countrycode === 'IN'; });
+      if (features.length) {
+        var f = features[0];
+        var p = f.properties;
+        var parts = [];
+        if (p.name) parts.push(p.name);
+        if (p.city && p.city !== p.name) parts.push(p.city);
+        if (p.state) parts.push(p.state);
+        applyLocation(type, f.geometry.coordinates[1], f.geometry.coordinates[0], parts.join(', '));
+      } else { showToast('Location not found.'); }
+    })
+    .catch(function() { showToast('Network error.'); });
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click', function(e) {
+  var ids = ['suggest-pickup', 'suggest-drop'];
+  var inputIds = ['map-search-pickup', 'map-search-drop'];
+  for (var i = 0; i < ids.length; i++) {
+    var list = document.getElementById(ids[i]);
+    var input = document.getElementById(inputIds[i]);
+    if (list && input && !list.contains(e.target) && !input.contains(e.target)) {
+      list.style.display = 'none';
+    }
+  }
+});
+
+
+// ===== MOBILE DRAWER =====
+(function() {
+  var isMob = function() { return window.innerWidth <= 768; };
+
+  function syncMobBadges() {
+    var pairs = [
+      ['mob-roster-badge','roster-badge'],
+      ['mob-emp-badge','emp-badge'],
+      ['mob-drv-badge','drv-badge'],
+      ['mob-veh-badge','veh-badge']
+    ];
+    pairs.forEach(function(p) {
+      var src = document.getElementById(p[1]);
+      var dst = document.getElementById(p[0]);
+      if (src && dst) dst.textContent = src.textContent;
+    });
+  }
+
+  window.toggleMobDrawer = function() {
+    syncMobBadges();
+    document.getElementById('mobDrawer').classList.toggle('open');
+  };
+  window.closeMobDrawer = function() {
+    document.getElementById('mobDrawer').classList.remove('open');
+  };
+  window.mobNav = function(page) {
+    // update active state in drawer
+    document.querySelectorAll('.mob-nav-item').forEach(function(el) {
+      el.classList.remove('active');
+    });
+    var item = document.getElementById('mnvi-' + page);
+    if (item) item.classList.add('active');
+    showPage(page);
+    closeMobDrawer();
+    // scroll to top of page on mobile
+    window.scrollTo(0,0);
+  };
+
+  // Show/hide hamburger based on screen size
+  function applyMobLayout() {
+    var btn = document.getElementById('mobMenuBtn');
+    if (!btn) return;
+    if (isMob()) {
+      btn.style.display = 'flex';
+    } else {
+      btn.style.display = 'none';
+      closeMobDrawer();
+    }
+  }
+
+  // Patch showPage to also sync drawer active state
+  var _origShowPageMob = window.showPage;
+  window.showPage = function(id) {
+    _origShowPageMob(id);
+    document.querySelectorAll('.mob-nav-item').forEach(function(el) {
+      el.classList.remove('active');
+    });
+    var item = document.getElementById('mnvi-' + id);
+    if (item) item.classList.add('active');
+    // Scroll to top on mobile after page switch
+    if (isMob()) {
+      setTimeout(function() { window.scrollTo(0,0); }, 50);
+      // also call invalidateSize for map
+      if (id === 'map' && typeof map !== 'undefined') {
+        setTimeout(function() { map.invalidateSize(); }, 200);
+      }
+    }
+  };
+
+  // Patch setDateFilter to sync mobile pills
+  var _origSetDateFilter = window.setDateFilter;
+  window.setDateFilter = function(f) {
+    _origSetDateFilter(f);
+    ['today','5','30'].forEach(function(id) {
+      var el = document.getElementById('mob-dp-' + id);
+      if (el) el.className = 'date-pill' + (id === f ? ' active' : '');
+    });
+  };
+
+  window.addEventListener('resize', applyMobLayout);
+  window.addEventListener('DOMContentLoaded', applyMobLayout);
+  applyMobLayout();
+  syncMobBadges();
+})();
+
+
+// ===== SAVED PLACES =====
+var savedPlaces = [
+  {
+    id: 1,
+    name: 'Telecom Layout Park',
+    address: 'Near Telecom Layout Park, Bogadi Main Rd, Mysuru, Karnataka 570006',
+    lat: 12.2781,
+    lon: 76.5968
+  }
+];
+
+function showSavedPlaces(type) {
+  var listId = type === 'pickup' ? 'suggest-pickup' : 'suggest-drop';
+  var list = document.getElementById(listId);
+  if (!savedPlaces.length) return;
+
+  var html = '<div class="suggest-saved-header">Saved Places</div>';
+  for (var i = 0; i < savedPlaces.length; i++) {
+    var sp = savedPlaces[i];
+    html += '<div class="suggest-saved-item" onclick="pickSavedPlace(\'' + type + '\',' + i + ')">'
+      + '<div class="suggest-saved-icon">&#9679;</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div class="suggest-saved-name">' + sp.name + '</div>'
+      + '<div class="suggest-saved-addr">' + sp.address + '</div>'
+      + '</div></div>';
+  }
+  list.innerHTML = html;
+  list.style.display = 'block';
+}
+
+function pickSavedPlace(type, idx) {
+  var sp = savedPlaces[idx];
+  if (!sp) return;
+  applyLocation(type, sp.lat, sp.lon, sp.address);
+}
+
+function saveCurrentResult(type, idx) {
+  var feature = suggestResults[type][idx];
+  if (!feature) return;
+  var p = feature.properties;
+  var nameParts = [];
+  if (p.name) nameParts.push(p.name);
+  if (p.city && p.city !== p.name) nameParts.push(p.city);
+  if (p.state) nameParts.push(p.state);
+  var coords = feature.geometry.coordinates;
+  var newPlace = {
+    id: Date.now(),
+    name: p.name || nameParts[0] || 'Saved Place',
+    address: nameParts.join(', '),
+    lat: coords[1],
+    lon: coords[0]
+  };
+  // Don't duplicate
+  var exists = savedPlaces.some(function(s) {
+    return Math.abs(s.lat - newPlace.lat) < 0.001 && Math.abs(s.lon - newPlace.lon) < 0.001;
+  });
+  if (!exists) {
+    savedPlaces.push(newPlace);
+    showToast(newPlace.name + ' saved to your places!');
+  } else {
+    showToast('Already in saved places.');
+  }
+}
+
+// Show saved places when input is focused and empty
+document.addEventListener('DOMContentLoaded', function() {
+  ['map-search-pickup', 'map-search-drop'].forEach(function(inputId) {
+    var type = inputId === 'map-search-pickup' ? 'pickup' : 'drop';
+    var el = document.getElementById(inputId);
+    if (!el) return;
+    el.addEventListener('focus', function() {
+      if (!this.value.trim() && savedPlaces.length) {
+        showSavedPlaces(type);
+      }
+    });
+  });
+});
+
+
+function handleSaveBtn(btn) {
+  var type = btn.getAttribute('data-savetype');
+  var idx = parseInt(btn.getAttribute('data-saveidx'));
+  saveCurrentResult(type, idx);
+  btn.textContent = 'Saved';
+  btn.className = 'suggest-save-btn saved';
+}
+</script>
